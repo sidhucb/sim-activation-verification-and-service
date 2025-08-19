@@ -3,6 +3,7 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:8081";
 
+// api service for login page
 export const loginUser = async (email, password) => {
   try {
     const response = await axios.post(`${BASE_URL}/users/login`, {
@@ -12,6 +13,21 @@ export const loginUser = async (email, password) => {
     return response.data;   // => { token: "..." }
   } catch (error) {
     console.error("Login error:", error);
+    throw error;
+  }
+};
+
+// api bootlicking for user registration
+export const registerUser = async (email, password) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/users/register`, {
+      email,
+      password,
+      role: "USER", // hardcoded role
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Registration error:", error);
     throw error;
   }
 };

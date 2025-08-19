@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from "react";
 import { loginUser } from "../services/apiService";
+import { jwtDecode } from "jwt-decode";
 
 function Login() {
   const navigate = useNavigate();
@@ -15,11 +16,19 @@ function Login() {
       // Optionally save the token
       localStorage.setItem("token", result.token);
 
-      // Navigate to dashboard
-      navigate('/dashboard');
-    } catch (error) {
-      alert("Invalid credentials");
-    }
+      // Decode token to get the role
+      const decoded = jwtDecode(result.token);
+      const role = decoded.role;
+
+      // Redirect based on role
+      if (role === "ADMIN") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+      } catch (error) {
+        alert("Invalid credentials");
+      }
   };
 
   return (
