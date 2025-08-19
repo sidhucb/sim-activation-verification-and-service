@@ -1,0 +1,17 @@
+# Eclipse & STS
+.metadata/
+*.classpath
+*.project
+*.settings/
+
+# IntelliJ
+.idea/
+*.iml
+
+# Build & Dependencies
+target/
+bin/
+
+# OS specific
+.DS_Store
+Thumbs.db
