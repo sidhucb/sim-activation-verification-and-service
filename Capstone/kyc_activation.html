@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Document Verification</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Document Verification</h1>
+
+      <section class="card">
+        <h2>Upload Document</h2>
+        <form id="uploadForm">
+          <div class="row">
+            <label for="cardType">Government Proof to upload</label>
+            <select id="cardType" name="cardType" required>
+              <option value="Aadhar">Aadhar</option>
+              <option value="Pan">Pan</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <label for="image1">Front image of the Government Id</label>
+            <input
+              type="file"
+              id="image1"
+              name="image1"
+              accept="image/*,.pdf"
+              required
+            />
+          </div>
+
+          <div class="row" id="image2Row">
+            <label for="image2">Back image of the Government Id</label>
+            <input
+              type="file"
+              id="image2"
+              name="image2"
+              accept="image/*,.pdf"
+            />
+          </div>
+
+          <button type="submit">Upload</button>
+        </form>
+        <pre id="uploadResult" class="result"></pre>
+      </section>
+
+      <section class="card">
+        <h2>Pending Documents</h2>
+        <button id="refreshPending">Refresh Pending</button>
+        <table class="table" id="pendingTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Card Type</th>
+              <th>Name</th>
+              <th>Age</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </div>
+
+    <script>
+      const BASE = "http://localhost:8082/api/documents";
+
+      const cardTypeEl = document.getElementById("cardType");
+      const image2Row = document.getElementById("image2Row");
+      cardTypeEl.addEventListener("change", () => {
+        image2Row.style.display =
+          cardTypeEl.value.toLowerCase() === "aadhar" ? "" : "none";
+      });
+      image2Row.style.display =
+        cardTypeEl.value.toLowerCase() === "aadhar" ? "" : "none";
+
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData();
+          const cardType = document.getElementById("cardType").value;
+          const image1 = document.getElementById("image1").files[0];
+          const image2 = document.getElementById("image2").files[0];
+
+          formData.append("cardType", cardType);
+          if (image1) formData.append("image1", image1);
+          if (cardType.toLowerCase() === "aadhar" && image2)
+            formData.append("image2", image2);
+
+          const resBox = document.getElementById("uploadResult");
+          resBox.textContent = "Uploading...";
+
+          try {
+            const res = await fetch(`${BASE}/upload`, {
+              method: "POST",
+              body: formData,
+            });
+            const text = await res.text();
+            try {
+              resBox.textContent = JSON.stringify(JSON.parse(text), null, 2);
+            } catch {
+              resBox.textContent = text;
+            }
+          } catch (err) {
+            resBox.textContent = "Error: " + err.message;
+          }
+        });
+
+      // Pending list
+      async function loadPending() {
+        const tbody = document.querySelector("#pendingTable tbody");
+        tbody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+        try {
+          const res = await fetch(`${BASE}/pending`);
+          const data = await res.json();
+          tbody.innerHTML = "";
+          if (!data.length) {
+            tbody.innerHTML =
+              '<tr><td colspan="6">No pending documents</td></tr>';
+            return;
+          }
+          data.forEach((row) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+            <td>${row.id ?? ""}</td>
+            <td>${row.cardType ?? ""}</td>
+            <td>${row.name ?? ""}</td>
+            <td>${row.age ?? ""}</td>
+            <td><span class="badge">${row.status ?? ""}</span></td>
+            <td>
+              <button data-id="${
+                row.id
+              }" data-status="approved" class="approve">Approve</button>
+              <button data-id="${
+                row.id
+              }" data-status="disapproved" class="disapprove">Disapprove</button>
+            </td>`;
+            tbody.appendChild(tr);
+          });
+        } catch (e) {
+          tbody.innerHTML = `<tr><td colspan="6">Error: ${e.message}</td></tr>`;
+        }
+      }
+      document
+        .getElementById("refreshPending")
+        .addEventListener("click", loadPending);
+      loadPending();
+
+      // Approve / Disapprove handlers
+      document
+        .querySelector("#pendingTable tbody")
+        .addEventListener("click", async (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+          const id = btn.getAttribute("data-id");
+          const status = btn.getAttribute("data-status");
+          try {
+            await fetch(
+              `${BASE}/${id}/status?status=${encodeURIComponent(status)}`,
+              {
+                method: "PUT",
+              }
+            );
+            loadPending();
+          } catch (err) {
+            alert("Update failed: " + err.message);
+          }
+        });
+
+      // Eligibility
+      document
+        .getElementById("loadEligibility")
+        .addEventListener("click", loadEligibility);
+      async function loadEligibility() {
+        const tbody = document.querySelector("#eligibilityTable tbody");
+        tbody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
+        try {
+          const res = await fetch(`${BASE}/eligibility`);
+          const data = await res.json();
+          tbody.innerHTML = "";
+          if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="5">No data</td></tr>';
+            return;
+          }
+          data.forEach((item) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+            <td>${item.id}</td>
+            <td>${item.name ?? ""}</td>
+            <td>${item.age ?? ""}</td>
+            <td>${item.address ?? ""}</td>
+            <td>${item.eligibilityStatus ?? ""}</td>`;
+            tbody.appendChild(tr);
+          });
+        } catch (e) {
+          tbody.innerHTML = `<tr><td colspan="5">Error: ${e.message}</td></tr>`;
+        }
+      }
+    </script>
+  </body>
+</html>

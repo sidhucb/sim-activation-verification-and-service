@@ -1,0 +1,18 @@
+spring.application.name=document-verification-service
+openrouter.api.key=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
+# Server Port Configuration
+server.port=8080
+
+# PostgreSQL Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/document_db
+spring.datasource.username=postgres
+spring.datasource.password=Yuvashree@2004
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+# File Upload Configuration
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+
+debug = true

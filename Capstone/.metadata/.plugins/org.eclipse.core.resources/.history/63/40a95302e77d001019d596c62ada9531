@@ -1,0 +1,92 @@
+package com.example.documentverification;
+
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import net.sourceforge.tess4j.Tesseract;
+import reactor.core.publisher.Mono;
+
+@Service
+public class OcrService {
+
+    private static final String OPENROUTER_CB = "openRouterApi";
+
+    private final Tesseract tesseract;
+    private final DocumentRepository documentRepository;
+    private final WebClient webClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${openrouter.api.key}")
+    private String openRouterApiKey;
+
+    public OcrService(DocumentRepository documentRepository) {
+        this.documentRepository = documentRepository;
+        this.tesseract = new Tesseract();
+        this.tesseract.setDatapath("C:/Program Files/Tesseract-OCR/tessdata");
+        this.tesseract.setLanguage("eng");
+
+        this.webClient = WebClient.builder()
+            .baseUrl("https://openrouter.ai/api/v1")
+            .defaultHeader("Content-Type", "application/json")
+            .build();
+    }
+
+    @CircuitBreaker(name = OPENROUTER_CB, fallbackMethod = "extractDataFallback")
+    @Retry(name = OPENROUTER_CB)
+    @TimeLimiter(name = OPENROUTER_CB)
+    private Mono<ExtractedAadharData> extractDataWithLLM(String text) {
+        String prompt = "You are an expert data extraction assistant. Analyze the following OCR text from an Indian Aadhaar card. " +
+                        "Extract the Name, Date of Birth (DOB), Gender, and Address. " +
+                        "Your response MUST be a single, minified JSON object with the following keys: \"name\", \"dob\", \"gender\", \"address\". " +
+                        "Format the date of birth as YYYY-MM-DD. If a value is not found, use \"Not Found\".\n\n" +
+                        "Here is the text:\n\n" + text;
+
+        OpenRouterRequest request = new OpenRouterRequest();
+        OpenRouterRequest.Message userMessage = new OpenRouterRequest.Message();
+        userMessage.role = "user";
+        userMessage.content = prompt;
+        request.messages.add(userMessage);
+
+        return webClient.post()
+                .uri("/chat/completions")
+                .header("Authorization", "Bearer " + openRouterApiKey)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(OpenRouterResponse.class)
+                .map(response -> {
+                    try {
+                        String jsonContent = response.choices.get(0).message.content;
+                        return objectMapper.readValue(jsonContent, ExtractedAadharData.class);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to parse LLM response JSON", e);
+                    }
+                });
+    }
+
+    // ✅ Fallback when CircuitBreaker/Retry/Timeout fails
+    private Mono<ExtractedAadharData> extractDataFallback(String text, Throwable throwable) {
+        System.err.println("Fallback triggered due to: " + throwable.getMessage());
+
+        ExtractedAadharData fallbackData = new ExtractedAadharData();
+        fallbackData.setName("Not Found");
+        fallbackData.setDob("Not Found");
+        fallbackData.setGender("Not Found");
+        fallbackData.setAddress("Not Found");
+
+        return Mono.just(fallbackData);
+    }
+
+	public DocumentDetails processDocument(String cardType, MultipartFile image1, MultipartFile image2) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+}

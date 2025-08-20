@@ -1,0 +1,14 @@
+package com.cardactivation;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.web.multipart.MultipartFile;
+@Primary
+public interface CardActivationService extends CardActivationRepository {
+
+	CardActivationEntity saveFilePath(String fileName, String filePath);
+	CardActivationEntity uploadAndSaveFile(MultipartFile file, String userName);
+	String extractedText(Long id);
+	String ocrFallback(Long id, Throwable t);
+	String findByverifyKyc(Long id);
+	CardActivationEntity getByUserName(String userName);
+}

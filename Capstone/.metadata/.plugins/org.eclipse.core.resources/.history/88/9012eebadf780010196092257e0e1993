@@ -1,0 +1,13 @@
+spring.application.name=SimCardActivation
+# PostgreSQL database connection settings
+spring.datasource.url=jdbc:postgresql://localhost:5432/card_activation_db
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# Hibernate JPA settings
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.show-sql=true
+debug =true
+server.port=8081

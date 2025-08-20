@@ -1,0 +1,92 @@
+package com.example.documentverification;
+
+import net.sourceforge.tess4j.ITesseract;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@Service
+public class OcrService {
+
+    @Autowired
+    private DocumentRepository documentRepository;
+
+    public DocumentDetails processDocument(String cardType, MultipartFile image1, MultipartFile image2)
+            throws IOException, TesseractException {
+
+        ITesseract tesseract = new Tesseract();
+        tesseract.setDatapath("tessdata"); // Make sure tessdata folder exists in resources
+
+        String extractedText1 = tesseract.doOCR(convert(image1));
+        String extractedText2 = (image2 != null) ? tesseract.doOCR(convert(image2)) : "";
+
+        DocumentDetails documentDetails = new DocumentDetails();
+        documentDetails.setCardType(cardType);
+
+        if ("Aadhar".equalsIgnoreCase(cardType)) {
+            parseAadharDetails(extractedText1 + " " + extractedText2, documentDetails);
+        } else if ("PAN".equalsIgnoreCase(cardType)) {
+            parsePanDetails(extractedText1, documentDetails);
+        }
+
+        documentDetails.setStatus("pending");
+        return documentRepository.save(documentDetails);
+    }
+
+    // Convert MultipartFile to File for OCR
+    private File convert(MultipartFile file) throws IOException {
+        File convFile = File.createTempFile("temp", null);
+        file.transferTo(convFile);
+        return convFile;
+    }
+
+    // --- Aadhaar Parsing Logic ---
+    private void parseAadharDetails(String text, DocumentDetails details) {
+        // Extract Aadhaar number (12 digits)
+        Matcher aadhaarMatcher = Pattern.compile("\\b\\d{4}\\s\\d{4}\\s\\d{4}\\b").matcher(text);
+        if (aadhaarMatcher.find()) {
+            details.setCardNumber(aadhaarMatcher.group());
+        }
+
+        // Extract DOB
+        Matcher dobMatcher = Pattern.compile("(\\d{2}/\\d{2}/\\d{4})").matcher(text);
+        if (dobMatcher.find()) {
+            details.setDob(dobMatcher.group());
+        }
+
+        // Extract Name (first line usually before "DOB" or "Year")
+        String[] lines = text.split("\\n");
+        if (lines.length > 1) {
+            details.setName(lines[0].trim());
+        }
+    }
+
+    // --- PAN Parsing Logic ---
+    private void parsePanDetails(String text, DocumentDetails details) {
+        // Extract PAN number (ABCDE1234F format)
+        Matcher panMatcher = Pattern.compile("[A-Z]{5}[0-9]{4}[A-Z]{1}").matcher(text);
+        if (panMatcher.find()) {
+            details.setCardNumber(panMatcher.group());
+        }
+
+        // Extract Name (usually in capital letters)
+        Matcher nameMatcher = Pattern.compile("([A-Z]+\\s[A-Z]+)").matcher(text);
+        if (nameMatcher.find()) {
+            details.setName(nameMatcher.group());
+        }
+
+        // Extract DOB
+        Matcher dobMatcher = Pattern.compile("(\\d{2}/\\d{2}/\\d{4})").matcher(text);
+        if (dobMatcher.find()) {
+            details.setDob(dobMatcher.group());
+        }
+    }
+}

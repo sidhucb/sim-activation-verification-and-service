@@ -1,0 +1,119 @@
+package com.cardactivation;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.ai.openai.OpenAiChatModel;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.Optional;
+
+@Primary
+@Service
+public class CardActivationServiceInterface implements CardActivationService {
+
+	private static final String UPLOAD_DIR = "upload/";
+
+    @Autowired
+    private CardActivationRepository repository;
+    @Autowired
+    private OpenAiChatModel openAiChatModel ;
+    @Autowired
+    private OcrService ocrService; 
+
+    @Autowired
+    public CardActivationServiceInterface(OpenAiChatModel openAiChatModel) {
+        this.openAiChatModel = openAiChatModel;
+    }
+
+    @Override
+    public CardActivationEntity uploadAndSaveFile(MultipartFile file, String userName) throws IOException {
+        // 1. Ensure upload directory exists
+        Path uploadDir = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+
+        // 2. Save file to local storage
+        Path filePath = uploadDir.resolve(file.getOriginalFilename());
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // 3. Create new entity
+        CardActivationEntity entity = new CardActivationEntity(
+                userName,
+                file.getOriginalFilename(),
+                filePath.toString(),
+                file.getBytes()
+        );
+
+        // 4. Extract text using OCR
+        String extractedText;
+        try {
+            extractedText = ocrService.extractText(file);  // ✅ Call your OCR service
+        } catch (Exception e) {
+            extractedText = "OCR extraction failed: " + e.getMessage();
+        }
+        entity.setExtractedText(extractedText);
+
+        // 5. Validate/Enrich extracted text using OpenAI
+        try {
+            String validatedText = openAiChatModel.call(
+                    "Validate or improve this extracted text for KYC: " + extractedText
+            );
+            entity.setAiValidation(validatedText);
+        } catch (Exception e) {
+            entity.setAiValidation("AI validation failed: " + e.getMessage());
+        }
+
+        // 6. Set default statuses
+        entity.setKycStatus("PENDING");
+        entity.setSimStatus("REQUESTED");
+
+        // 7. Save to DB
+        return repository.save(entity);
+    }
+
+
+
+    @Override
+    @CircuitBreaker(name = "ocrService", fallbackMethod = "ocrFallback")
+    public String findByExtractedText(Long id) {
+        Optional<CardActivationEntity> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return "Record not found, try a different file.";
+        }
+        CardActivationEntity entity = opt.get();
+        
+        return entity.getExtractedText();
+
+    }
+
+    // Fallback must have the same params + Throwable
+    public String ocrFallback(Long id, Throwable t) {
+        return "OCR service is unavailable. Please try again later.";
+    }
+
+    @Override
+    public String verifyKyc(Long id) {
+        Optional<CardActivationEntity> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return "Record not found";
+        }
+        CardActivationEntity entity = opt.get();
+        if (entity.getExtractedText() != null && !entity.getExtractedText().isEmpty()) {
+            entity.setKycStatus("Completed");
+        } else {
+            entity.setKycStatus("Rejected");
+        }
+        repository.save(entity);
+        return "KYC Status: " + entity.getKycStatus();
+    }
+
+    @Override
+    public CardActivationEntity findByUserName(String userName) {
+        return repository.findByUserName(userName).orElse(null);
+    }
+}

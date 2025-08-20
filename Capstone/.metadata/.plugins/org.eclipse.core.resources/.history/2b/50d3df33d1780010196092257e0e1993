@@ -1,0 +1,40 @@
+package com.cardactivation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+@RestController
+@RequestMapping("/card")
+public class CardActivationController {
+
+	    @Autowired
+	    private CardActivationServiceInterface service;
+
+	    // Upload with userName param added
+	    @PostMapping("/upload")
+	    public CardActivationEntity findByFileName(@RequestParam("file") MultipartFile file,
+	                                          @RequestParam("userName") String userName) throws IOException {
+	        return service.findByuploadAndSaveFile(file, userName);
+	    }
+
+	    // Extract text (OCR simulation) by ID
+	    @GetMapping("/extract/{id}")
+	    public String getByextractText(@PathVariable Long id) {
+	        return service.findByextractedText(id);
+	    }
+
+	    // Verify KYC - simulate
+	    @PostMapping("/verifyKyc/{id}")
+	    public String getByverifyKyc(@PathVariable Long id) {
+	        return service.findByverifyKyc(id);
+	    }
+	   
+
+	    // Get record by name
+	    @GetMapping("/get/{userName}")
+	    public CardActivationEntity getByName(@PathVariable String userName) {
+	        return service.findByUserName(userName);
+	    }
+	}
