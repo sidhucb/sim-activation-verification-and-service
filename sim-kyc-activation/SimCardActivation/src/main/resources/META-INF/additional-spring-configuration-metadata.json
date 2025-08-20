@@ -1,0 +1,37 @@
+{"properties": [
+  {
+    "name": "spring.ai.openai.api-key",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.ai.openai.api-key'"
+  },
+  {
+    "name": "spring.datasource.openai.api-key",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.datasource.openai.api-key'"
+  },
+  {
+    "name": "spring.datasource.ai",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.datasource.ai'"
+  },
+  {
+    "name": "spring.datasource.openai.chat.options.model",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.datasource.openai.chat.options.model'"
+  },
+  {
+    "name": "spring.ai.openai.api-key",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.ai.openai.api-key'"
+  },
+  {
+    "name": "logging.security.user.name",
+    "type": "java.lang.String",
+    "description": "A description for 'logging.security.user.name'"
+  },
+  {
+    "name": "logging.security.user.password",
+    "type": "java.lang.String",
+    "description": "A description for 'logging.security.user.password'"
+  }
+]}
