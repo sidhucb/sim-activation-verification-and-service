@@ -28,28 +28,6 @@ openrouter:
   api:
     key: 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
 
-resilience4j:
-  circuitbreaker:
-    instances:
-      openRouterApi:
-        registerHealthIndicator: true
-        slidingWindowSize: 10
-        permittedNumberOfCallsInHalfOpenState: 3
-        minimumNumberOfCalls: 5
-        failureRateThreshold: 50
-        waitDurationInOpenState: 10s
-        automaticTransitionFromOpenToHalfOpenEnabled: true
 
-  retry:
-    instances:
-      openRouterApi:
-        max-attempts: 3
-        wait-duration: 2s
-        enable-exponential-backoff: true
-
-  timelimiter:
-    instances:
-      openRouterApi:
-        timeout-duration: 5s
 
 debug: true

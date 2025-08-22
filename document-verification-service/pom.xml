@@ -78,7 +78,31 @@
     <artifactId>resilience4j-retry</artifactId>
     <version>2.2.0</version>
 </dependency>
-		
+<dependency>
+    <groupId>com.github.jai-imageio</groupId>
+    <artifactId>jai-imageio-core</artifactId>
+    <version>1.4.0</version>
+</dependency>
+<dependency>
+    <groupId>com.github.jai-imageio</groupId>
+    <artifactId>jai-imageio-core</artifactId>
+    <version>1.4.0</version>
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+</dependency>
+<dependency>
+    <groupId>jakarta.validation</groupId>
+    <artifactId>jakarta.validation-api</artifactId>
+    <version>3.0.2</version> <!-- or match your Spring Boot version -->
+</dependency>
+	<!-- Apache Tika -->
+<dependency>
+    <groupId>org.apache.tika</groupId>
+    <artifactId>tika-core</artifactId>
+    <version>2.9.1</version>
+</dependency>
 	</dependencies>
 	
 
@@ -92,6 +116,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
@@ -109,6 +134,12 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<resources>
+    <resource>
+        <directory>tessdata</directory>
+        <targetPath>${project.build.directory}/classes/tessdata</targetPath>
+    </resource>
+</resources>
 	</build>
 
 </project>

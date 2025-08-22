@@ -1,78 +1,102 @@
 package com.example.documentverification;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import net.sourceforge.tess4j.TesseractException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+
 @RestController
 @RequestMapping("/api/documents")
-@CrossOrigin(origins = "http://localhost:3000") // Allows frontend to connect
-
 public class DocumentController {
 
-    // THIS LINE IS CRUCIAL
-    @Autowired
-    private OcrService ocrService; 
+    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+            "jpg", "jpeg", "jfif", "png", "tif", "tiff", "bmp", "pdf"
+    );
 
-    @Autowired
-    private DocumentRepository documentRepository;
+    private final OcrService ocrService;
+    private final DocumentRepository documentRepository;
+
+    public DocumentController(OcrService ocrService, DocumentRepository documentRepository) {
+        this.ocrService = ocrService;
+        this.documentRepository = documentRepository;
+    }
 
     @PostMapping("/upload")
-    // THIS METHOD MUST CALL THE OCR SERVICE
     public ResponseEntity<?> uploadDocument(
-        @RequestParam("cardType") String cardType,
-        @RequestParam("image1") MultipartFile image1,
-        @RequestParam(value = "image2", required = false) MultipartFile image2
-    ) {
-        if (image1.isEmpty() || ("Aadhar".equalsIgnoreCase(cardType) && (image2 == null || image2.isEmpty()))) {
-            return ResponseEntity.badRequest().body("Please upload all required images.");
-        }
+            @RequestParam String cardType,
+            @RequestParam MultipartFile image1,
+            @RequestParam(required = false) MultipartFile image2) {
 
         try {
-            // It should be calling this line:
-            DocumentDetails savedDetails = ocrService.processDocument(cardType, image1, image2);
-            return ResponseEntity.ok(savedDetails); // And returning the result
-        } catch (IOException | TesseractException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing document: " + e.getMessage());
-        }
-    }
-
-    // (The other methods for getPendingDocuments and updateStatus remain the same)
-    @GetMapping("/pending")
-    public List<DocumentDetails> getPendingDocuments() {
-        return documentRepository.findByStatus("pending");
-    }
-
-    @PutMapping("/{id}/status")
-    public ResponseEntity<DocumentDetails> updateStatus(
-        @PathVariable Long id,
-        @RequestParam String status
-    ) {
-        Optional<DocumentDetails> optionalDocument = documentRepository.findById(id);
-        if (optionalDocument.isPresent()) {
-            DocumentDetails document = optionalDocument.get();
-            if ("approved".equalsIgnoreCase(status) || "disapproved".equalsIgnoreCase(status)) {
-                document.setStatus(status);
-                documentRepository.save(document);
-                return ResponseEntity.ok(document);
+            if (image1.isEmpty() || ("aadhaar".equalsIgnoreCase(cardType) && (image2 == null || image2.isEmpty()))) {
+                return ResponseEntity.badRequest().body("Upload required image(s)");
             }
-            return ResponseEntity.badRequest().build();
+
+            if (!isSupportedFormat(image1)) {
+                log.warn("Unsupported file format for image1");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Unsupported file format for image1. Supported: JPG, JPEG, JFIF, PNG, TIFF, BMP, PDF.");
+            }
+            if (image2 != null && !image2.isEmpty() && !isSupportedFormat(image2)) {
+                log.warn("Unsupported file format for image2");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Unsupported file format for image2. Supported: JPG, JPEG, JFIF, PNG, TIFF, BMP, PDF.");
+            }
+
+            DocumentDetails details = ocrService.processDocument(cardType, image1, image2);
+            maskSensitiveData(cardType, details);
+            documentRepository.save(details);
+
+            return ResponseEntity.ok(details);
+
+        } catch (IOException | TesseractException e) {
+            log.error("OCR failed: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Unexpected error occurred while processing the document.");
         }
-        return ResponseEntity.notFound().build();
-    }
-    @GetMapping("/eligibility")
-    public List<Object[]> getEligibilityStatus() {
-        return documentRepository.findEligibilityStatus();
     }
 
+    private boolean isSupportedFormat(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null) {
+            int lastDotIndex = originalFilename.lastIndexOf('.');
+            if (lastDotIndex > 0) {
+                String extension = originalFilename.substring(lastDotIndex + 1).toLowerCase();
+                if (ALLOWED_EXTENSIONS.contains(extension)) {
+                    return true;
+                }
+            }
+        }
+        // Fallback to Tika MIME check
+        try {
+            return ocrService.isSupportedMimeType(file);
+        } catch (IOException e) {
+            log.warn("Failed to detect MIME type with Tika: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private void maskSensitiveData(String cardType, DocumentDetails details) {
+        if (details.getCardNumber() == null || details.getCardNumber().length() < 4) {
+            return;
+        }
+
+        String num = details.getCardNumber();
+        if ("aadhaar".equalsIgnoreCase(cardType)) {
+            details.setCardNumber("XXXX-XXXX-" + num.substring(num.length() - 4));
+        } else if ("pan".equalsIgnoreCase(cardType) || "pancard".equalsIgnoreCase(cardType)) {
+            details.setCardNumber("XXXXX" + num.substring(num.length() - 4));
+        } else {
+            details.setCardNumber("****" + num.substring(num.length() - 4));
+        }
+    }
 }
-
-
