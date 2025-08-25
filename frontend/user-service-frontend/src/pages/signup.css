@@ -1,32 +1,49 @@
-/* Signup Page Styles */
+.signup-page {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: system-ui, sans-serif;
+  color: #fff;
+  padding: 20px;
+}
+
 .signup-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 50px;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 20px;
-  width: 90%;
-  max-width: 350px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  max-width: 1200px;
+  width: 100%;
 }
 
-.signup-container h2 {
-  font-size: 24px;
+.signup-card {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.signup-title {
+  font-size: 2.5rem;
   margin-bottom: 20px;
-  font-weight: 600;
-  text-align: center;
 }
 
-.signup-container input {
+input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #dbdbdb;
-  border-radius: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
   font-size: 14px;
-  box-sizing: border-box;
+}
+
+input::placeholder {
+  color: #ccc;
 }
 
 .password-wrapper {
@@ -36,54 +53,48 @@
 
 .toggle-password {
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
   font-size: 13px;
+  color: #7f00ff;
   font-weight: 600;
-  color: #0095f6;
-  user-select: none;
 }
 
 .message {
   font-size: 12px;
-  margin: 4px 0 0 0;   /* minimal spacing to prevent large gaps */
-  text-align: left;     /* left-align */
-  width: 100%;          /* aligns with input width */
-}
-
-.success {
-  color: green;
-}
-
-.error {
-  color: red;
-}
-
-button {
+  margin: 4px 0 0 0;
+  text-align: left;
   width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 6px;
-  background-color: #0095f6;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 10px;
 }
 
-button:disabled {
-  background-color: #b2dffc;
-  cursor: not-allowed;
-}
+.success { color: #00ffae; }
+.error { color: #ff4d6d; }
 
-.signup-page {
+.signup-bottom {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;   /* full viewport height */
-  width: 100%;
-  background-color: #fafafa; /* matches body */
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
 }
 
+.signup-showcase {
+  flex: 1;
+  color: #ddd;
+}
+
+.signup-showcase h2 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+.signup-showcase ul {
+  list-style: none;
+  padding-left: 0;
+  font-size: 1rem;
+}
+
+.signup-showcase ul li {
+  margin-bottom: 10px;
+}

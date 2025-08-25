@@ -1,17 +1,105 @@
-/* index.css - minimal global reset */
-
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-}
-
+/* Global Reset */
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
-/* optional default body background */
-body {
-  background-color: #fafafa;
-  color: #000;
+:root {
+  --primary-color: #9f7aea;
+  --secondary-color: #00d4ff;
+  --accent-color: #ff4d6d;
+  --bg-gradient: linear-gradient(135deg, #1a1a1a, #242424);
+  --card-bg: rgba(60, 60, 60, 0.85);
+  --text-color: #fff;
+  --text-secondary: #ccc;
 }
+
+body {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-color);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Neon/glass card */
+.card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  padding: 2rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8);
+}
+
+/* Buttons */
+button {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+button:hover {
+  background-color: #805ad5;
+  transform: translateY(-2px);
+}
+
+button:disabled {
+  background-color: #b2dffc;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+input {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+/* Password toggle */
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--secondary-color);
+}
+
+/* Floating neon circles animation */
+.animate-pulse {
+  animation: pulse 12s infinite ease-in-out alternate;
+}
+
+@keyframes pulse {
+  0% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(25px) translateX(25px); }
+  100% { transform: translateY(0px) translateX(0px); }
+}
+
+/* Utility classes */
+.text-center { text-align: center; }
+.mt-10 { margin-top: 2.5rem; }
+.mb-8 { margin-bottom: 2rem; }
+.space-y-4 > * + * { margin-top: 1rem; }
+.space-y-5 > * + * { margin-top: 1.25rem; }

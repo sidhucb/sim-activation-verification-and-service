@@ -1,10 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/apiService";
-import { jwtDecode } from "jwt-decode";
-import "./login.css";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import "./Login.css";
 
-function Login() {
+export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,10 +16,7 @@ function Login() {
     try {
       const result = await loginUser(email, password);
       localStorage.setItem("token", result.token);
-
-      const decoded = jwtDecode(result.token);
-      const role = decoded.role;
-
+      const role = JSON.parse(atob(result.token.split(".")[1])).role;
       if (role === "ADMIN") navigate("/admin-dashboard");
       else navigate("/dashboard");
     } catch (error) {
@@ -40,38 +38,53 @@ function Login() {
   return (
     <div className="login-page">
       <div className="login-container">
-        <h2>Login</h2>
+        <Card className="login-card">
+          <h2 className="login-title">Login</h2>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={handleEmailChange}
-        />
-        {emailMessage && (
-          <p className={`message ${emailMessage.includes("✅") ? "success" : "error"}`}>
-            {emailMessage}
-          </p>
-        )}
-
-        <div className="password-wrapper">
           <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={handleEmailChange}
           />
-          <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
-            {showPassword ? "Hide" : "Show"}
-          </span>
-        </div>
+          {emailMessage && (
+            <p className={`message ${emailMessage.includes("✅") ? "success" : "error"}`}>
+              {emailMessage}
+            </p>
+          )}
 
-        <button onClick={handleLogin} disabled={!isFormValid}>
-          Login
-        </button>
+          <div className="password-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? "Hide" : "Show"}
+            </span>
+          </div>
+
+          <Button onClick={handleLogin} disabled={!isFormValid}>
+            Login
+          </Button>
+
+          <div className="login-bottom">
+            <Button onClick={() => navigate("/")}>Back to Landing</Button>
+            <Button onClick={() => navigate("/signup")}>Create Account</Button>
+          </div>
+        </Card>
+
+        <div className="login-showcase">
+          <h2>Why Nexus?</h2>
+          <ul>
+            <li>Fast SIM verification</li>
+            <li>Secure account management</li>
+            <li>Real-time notifications</li>
+            <li>Modern Aurora UI</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
 }
-
-export default Login;

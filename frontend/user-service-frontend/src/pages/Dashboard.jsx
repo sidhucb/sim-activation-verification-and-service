@@ -1,21 +1,17 @@
+import React from "react";
 import "./Dashboard.css";
+import Card from "../components/Card";
 
-function Dashboard() {
+export default function Dashboard() {
   return (
     <div className="dashboard-page">
-      {/* Optional background graphics */}
-      <div className="bg-circle circle1"></div>
-      <div className="bg-circle circle2"></div>
-
-      <div className="dashboard-container">
-        <h1 className="dashboard-title">Dashboard</h1>
-        <div className="boxes-wrapper">
-          <div className="dashboard-box">Check SIM Status</div>
-          <div className="dashboard-box">Get New SIM</div>
-        </div>
+      <h1 className="dashboard-title">Dashboard</h1>
+      <div className="dashboard-grid">
+        <Card className="dashboard-card">Check SIM Status</Card>
+        <Card className="dashboard-card">Get New SIM</Card>
+        <Card className="dashboard-card">Profile Settings</Card>
+        <Card className="dashboard-card">Notifications</Card>
       </div>
     </div>
   );
 }
-
-export default Dashboard;

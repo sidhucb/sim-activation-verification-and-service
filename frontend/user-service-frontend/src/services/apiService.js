@@ -1,33 +1,31 @@
-// src/services/apiService.js
 import axios from "axios";
 
 const BASE_URL = "http://localhost:8081";
 
-// api service for login page
+// Login API
 export const loginUser = async (email, password) => {
   try {
-    const response = await axios.post(`${BASE_URL}/users/login`, {
-      email,
-      password,
-    });
-    return response.data;   // => { token: "..." }
-  } catch (error) {
-    console.error("Login error:", error);
-    throw error;
+    const response = await axios.post(`${BASE_URL}/users/login`, { email, password });
+    return response.data; // { token: "..." }
+  } catch (err) {
+    console.error("Login error:", err);
+    if (err.response && err.response.data && err.response.data.message) {
+      throw new Error(err.response.data.message);
+    }
+    throw new Error("Login failed. Check credentials or server.");
   }
 };
 
-// api bootlicking for user registration
+// Registration API
 export const registerUser = async (email, password) => {
   try {
-    const response = await axios.post(`${BASE_URL}/users/register`, {
-      email,
-      password,
-      role: "USER", // hardcoded role
-    });
+    const response = await axios.post(`${BASE_URL}/users/register`, { email, password, role: "USER" });
     return response.data;
-  } catch (error) {
-    console.error("Registration error:", error);
-    throw error;
+  } catch (err) {
+    console.error("Registration error:", err);
+    if (err.response && err.response.data && err.response.data.message) {
+      throw new Error(err.response.data.message);
+    }
+    throw new Error("Registration failed. Try again.");
   }
 };
