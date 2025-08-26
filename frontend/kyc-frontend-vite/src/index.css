@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom root variables if needed */
+:root {
+  --bg: #0b1020;
+  --card: #121a34;
+  --text: #eaf0ff;
+  --muted: #a6b0cf;
+  --accent: #7aa2ff;
+  --ok: #37c978;
+  --bad: #ff6b6b;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

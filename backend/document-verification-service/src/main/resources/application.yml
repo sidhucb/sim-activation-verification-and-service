@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: document-verification-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/document_verification_db
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8082
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    register-with-eureka: true
+    fetch-registry: true
+
+servlet:
+  multipart:
+    max-file-size: 10MB
+    max-request-size: 10MB
+
+openrouter:
+  api-key: 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
+
+debug: true
