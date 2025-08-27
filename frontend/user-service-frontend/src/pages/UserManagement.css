@@ -1,0 +1,58 @@
+/* UserManagement.css */
+
+.user-management-page {
+  /* Basic page padding to prevent content from touching edges */
+  padding: 40px;
+  /* Make sure the content is visible above the navbar */
+  padding-top: 80px; 
+}
+
+.page-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+  color: #fff;
+}
+
+/* Use your existing card style directly */
+.user-management-card {
+  /* This class is now effectively a placeholder for the global styling */
+}
+
+/* Table styling to fit the Aurora theme */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 1rem;
+}
+
+th, td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th {
+  color: #a0a0a0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.user-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Error message styling */
+.error-message {
+  text-align: center;
+  color: var(--accent-color);
+  font-weight: 600;
+}

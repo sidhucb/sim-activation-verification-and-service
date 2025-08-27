@@ -21,11 +21,24 @@ public class JwtUtil {
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
+    
+    public String extractRole(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("role", String.class); // Assumes 'role' is stored in JWT claims
+    }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
+    
+    public Long extractId(String token) {
+        Claims claims = extractAllClaims(token);
+        // "id" claim is stored as Integer, cast to Number then get longValue
+        Number idNumber = claims.get("id", Number.class);
+        return idNumber.longValue();
+    }
+
 
     private Claims extractAllClaims(String token) throws JwtException {
         return Jwts.parserBuilder()

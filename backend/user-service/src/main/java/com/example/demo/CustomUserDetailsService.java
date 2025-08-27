@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CustomUserDetailsService implements UserDetailsService{
+public class CustomUserDetailsService implements UserDetailsService {
 	
 	private final UserRepository userRepository;
 	
@@ -22,8 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService{
 		return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPassword()) // already encoded
-                .roles(user.getRole())        // e.g. "ADMIN" or "USER"
+                .authorities(user.getRole())  // Use authorities to match your @PreAuthorize
                 .build();
 	}
-
 }

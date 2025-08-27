@@ -1,6 +1,8 @@
 .admin-page {
   min-height: 100vh;
   padding: 40px;
+  /* This is the fix: pushes content down below the navbar */
+  padding-top: 80px; 
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
   font-family: system-ui, sans-serif;
   color: #fff;

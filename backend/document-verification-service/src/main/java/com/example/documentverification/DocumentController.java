@@ -1,7 +1,6 @@
 package com.example.documentverification;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,7 +10,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.lang.InterruptedException;
-import com.example.documentverification.JwtUtil; // Correct import path
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -23,56 +24,40 @@ public class DocumentController {
 
     @Autowired
     private DocumentRepository documentRepository;
-    
-    // IMPORTANT: Inject the JwtUtil to validate the token
-    @Autowired
-    private JwtUtil jwtUtil;
+
+    // ---------------- User Endpoints ----------------
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadDocument(
-        @RequestHeader("Authorization") String authorizationHeader, // Get the Authorization header
         @RequestParam("cardType") String cardType,
         @RequestParam("image1") MultipartFile image1,
         @RequestParam(value = "image2", required = false) MultipartFile image2
     ) {
-        // Step 1: Validate the JWT and get the user ID
-        String jwtToken = authorizationHeader.substring(7); // Remove "Bearer " prefix
-        String userId;
-        try {
-            // Ensure the JWT is valid and get the user ID from its payload
-            if (!jwtUtil.validateToken(jwtToken)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired JWT token.");
-            }
-            userId = jwtUtil.extractUsername(jwtToken);
-        } catch (Exception e) {
-            // If any part of validation fails, return unauthorized
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid JWT token: " + e.getMessage());
-        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userId = auth.getName(); // logged-in user ID/email
 
-        // Step 2: Proceed with the rest of the logic, using the extracted userId
         if (image1.isEmpty() || ("Aadhar".equalsIgnoreCase(cardType) && (image2 == null || image2.isEmpty()))) {
             return ResponseEntity.badRequest().body("Please upload all required images.");
         }
 
         try {
-            // Pass the userId to the service layer to associate it with the document
             DocumentDetails savedDetails = ocrService.processDocument(cardType, image1, image2, userId);
             return ResponseEntity.ok(savedDetails);
         } catch (IOException | TesseractException e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing document: " + e.getMessage());
+            return ResponseEntity.status(500).body("Error processing document: " + e.getMessage());
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             String errorMessage = (cause != null) ? cause.getMessage() : e.getMessage();
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error during LLM processing: " + errorMessage);
+            return ResponseEntity.status(500).body("Error during LLM processing: " + errorMessage);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restore the interrupted status
+            Thread.currentThread().interrupt();
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("LLM processing was interrupted: " + e.getMessage());
+            return ResponseEntity.status(500).body("LLM processing was interrupted: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + e.getMessage());
+            return ResponseEntity.status(500).body("An unexpected error occurred: " + e.getMessage());
         }
     }
 
@@ -98,9 +83,40 @@ public class DocumentController {
         }
         return ResponseEntity.notFound().build();
     }
-    
+
     @GetMapping("/eligibility")
     public List<Object[]> getEligibilityStatus() {
         return documentRepository.findEligibilityStatus();
     }
+
+    // ---------------- Admin Endpoints ----------------
+    // Only users with ROLE_ADMIN can access these
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/all")
+    public ResponseEntity<List<DocumentDetails>> getAllDocuments() {
+        List<DocumentDetails> documents = documentRepository.findAll();
+        return ResponseEntity.ok(documents);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/approve/{id}")
+    public ResponseEntity<DocumentDetails> approveDocument(@PathVariable Long id) {
+        DocumentDetails doc = documentRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Document not found"));
+        doc.setStatus("Approved");
+        documentRepository.save(doc);
+        return ResponseEntity.ok(doc);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/reject/{id}")
+    public ResponseEntity<DocumentDetails> rejectDocument(@PathVariable Long id) {
+        DocumentDetails doc = documentRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Document not found"));
+        doc.setStatus("Rejected");
+        documentRepository.save(doc);
+        return ResponseEntity.ok(doc);
+    }
+
 }
