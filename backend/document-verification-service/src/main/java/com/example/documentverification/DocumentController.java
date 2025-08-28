@@ -3,10 +3,13 @@ package com.example.documentverification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import net.sourceforge.tess4j.TesseractException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.lang.InterruptedException;
@@ -24,6 +27,10 @@ public class DocumentController {
 
     @Autowired
     private DocumentRepository documentRepository;
+    
+    @Autowired
+    private RestTemplate restTemplate;
+
 
     // ---------------- User Endpoints ----------------
 
@@ -102,12 +109,43 @@ public class DocumentController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/approve/{id}")
     public ResponseEntity<DocumentDetails> approveDocument(@PathVariable Long id) {
+        // Fetch the document
         DocumentDetails doc = documentRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        // Update status
         doc.setStatus("Approved");
         documentRepository.save(doc);
+
+        // Extract uploader email from document (userId field)
+        String uploaderEmail = doc.getUserId(); // "shonnappan@gmail.com" for example
+
+        // Create a SIM request in SimApp for the correct user with status "Approved"
+        createSimRequestInSimApp(uploaderEmail, "Approved");
+
         return ResponseEntity.ok(doc);
     }
+
+    
+    private void createSimRequestInSimApp(String userEmail, String status) {
+        String simappUrl = "http://localhost:8086/api/sim/requests";
+        Map<String, Object> payload = new HashMap<>();
+
+        payload.put("requestId", "REQ-" + System.currentTimeMillis());
+        payload.put("email", userEmail);
+        String username = userEmail.contains("@") ? userEmail.split("@")[0] : userEmail;
+        payload.put("username", username);
+
+        // Set status based on document approval
+        payload.put("status", status);
+
+        try {
+            restTemplate.postForEntity(simappUrl, payload, String.class);
+        } catch (Exception e) {
+            System.err.println("Failed to create SIM request for " + userEmail + ": " + e.getMessage());
+        }
+    }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/reject/{id}")

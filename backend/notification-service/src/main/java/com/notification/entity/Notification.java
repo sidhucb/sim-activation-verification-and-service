@@ -1,12 +1,9 @@
 package com.notification.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 
 @Entity
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

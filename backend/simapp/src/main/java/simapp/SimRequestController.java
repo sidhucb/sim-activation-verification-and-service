@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.util.*;
@@ -20,137 +21,144 @@ public class SimRequestController {
     @Autowired
     private AllocatedNumberRepository allocatedNumberRepository;
 
-    // This /status endpoint is correct and needs no changes.
-    // The logic to check for activation has been correctly moved to the scheduler.
-    @PostMapping("/status")
-    @Transactional
-    public ResponseEntity<StatusCheckResponse> checkRequestStatus(@RequestBody StatusCheckRequest statusCheckRequest) {
-        Optional<SimRequest> requestOptional = simRequestRepository.findByEmailAndRequestId(
-                statusCheckRequest.getEmail(),
-                statusCheckRequest.getRequestId()
-        );
+    @Autowired
+    private RestTemplate restTemplate;
 
-        if (requestOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    @Autowired
+    private JwtUtil jwtUtil;
 
-        SimRequest request = requestOptional.get();
-        String status = request.getStatus();
-        String message;
-        String phoneNumber = null;
-
-        switch (status.toLowerCase()) {
-            case "pending":
-                message = "Your application has been submitted and is pending review.";
-                break;
-            case "approved":
-                message = "Congratulations, your KYC has been approved! You can now proceed to generate and select your mobile number.";
-                break;
-            case "progress":
-                message = "You are in the process of selecting a mobile number. Please choose one from the generated list.";
-                break;
-            case "provisioning":
-                message = "Your selected number is being provisioned. The SIM will be activated within 24 hours.";
-                break;
-            case "active":
-                phoneNumber = request.getPhoneNumber();
-                message = "Your SIM has been activated and is ready to use.";
-                break;
-            case "inactive":
-                message = "Your SIM is inactive because it has not been recharged for an extended period.";
-                break;
-            case "deactivated":
-                message = "This number has been permanently disconnected in accordance with TRAI regulations.";
-                break;
-            default:
-                message = "Unknown status.";
-                break;
-        }
-
-        return ResponseEntity.ok(new StatusCheckResponse(status, message, phoneNumber));
+    // Notify user via notification-service
+    private void notifyUser(String email, String message) {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("email", email);
+        payload.put("message", message);
+        restTemplate.postForEntity("http://notification-service/notifications/send", payload, String.class);
     }
 
+    // Extract email from JWT token
+    private String getEmailFromToken(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            return jwtUtil.extractEmail(token);
+        }
+        throw new RuntimeException("Missing or invalid Authorization header");
+    }
+
+    // ---------------- Status Check ----------------
+    @PostMapping("/status")
+    @Transactional
+    public ResponseEntity<StatusCheckResponse> checkRequestStatus(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody StatusCheckRequest req) {
+
+        String email = getEmailFromToken(authHeader);
+
+        return simRequestRepository.findByEmailAndRequestId(email, req.getRequestId())
+                .map(r -> {
+                    String s = Optional.ofNullable(r.getStatus()).orElse("unknown");
+                    String msg;
+                    String msisdn = null;
+
+                    switch (s.toLowerCase()) {
+                        case "pending" -> msg = "Your application has been submitted and is pending review.";
+                        case "approved" -> msg = "KYC approved! Generate and select your number.";
+                        case "progress" -> msg = "Please choose a number from the generated list.";
+                        case "provisioning" -> msg = "Provisioning in progress. Activation within 24 hours.";
+                        case "active" -> {
+                            msisdn = r.getPhoneNumber();
+                            msg = "Your SIM is active.";
+                        }
+                        case "inactive" -> msg = "Your SIM is inactive due to no recharge.";
+                        case "deactivated" -> msg = "Number permanently disconnected (TRAI).";
+                        default -> msg = "Unknown status.";
+                    }
+
+                    return ResponseEntity.ok(new StatusCheckResponse(s, msg, msisdn));
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // ---------------- Generate Number ----------------
     @PostMapping("/generate-number")
     @Transactional
-    public ResponseEntity<?> generateNumber(@RequestBody GenerateNumberRequest request) {
-        Optional<SimRequest> requestOptional = simRequestRepository.findByEmailAndRequestId(request.getEmail(), request.getRequestId());
+    public ResponseEntity<?> generateNumber(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody GenerateNumberRequest req) {
 
-        if (requestOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Request not found.");
+        String email = getEmailFromToken(authHeader);
+
+        if (req.getFourDigits() == null || !req.getFourDigits().matches("\\d{4}")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("fourDigits must be exactly 4 digits.");
         }
 
-        SimRequest simRequest = requestOptional.get();
-        String currentStatus = simRequest.getStatus();
+        var opt = simRequestRepository.findByEmailAndRequestId(email, req.getRequestId());
+        if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Request not found.");
 
-        // --- FIX ---
-        // Allow number generation for users in 'Approved' OR 'Progress' state.
-        if (!"approved".equalsIgnoreCase(currentStatus) && !"progress".equalsIgnoreCase(currentStatus)) {
+        SimRequest sr = opt.get();
+        String curr = Optional.ofNullable(sr.getStatus()).orElse("");
+
+        if (!"approved".equalsIgnoreCase(curr) && !"progress".equalsIgnoreCase(curr)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Number generation is only allowed for 'Approved' or 'Progress' statuses.");
         }
 
-        // --- Number generation logic (remains the same) ---
-        Set<String> generatedNumbers = new HashSet<>();
-        Random random = new Random();
-        String[] prefixes = {"9", "8", "7"};
+        Set<String> out = new LinkedHashSet<>();
+        Random rnd = new Random();
+        String[] prefixes = {"9","8","7"};
         int attempts = 0;
-        while (generatedNumbers.size() < 5 && attempts < 100) {
-            String prefix = prefixes[random.nextInt(prefixes.length)];
-            StringBuilder randomNumberPart = new StringBuilder();
-            for (int j = 0; j < 6; j++) {
-                randomNumberPart.append(random.nextInt(10));
-            }
-            randomNumberPart.insert(random.nextInt(randomNumberPart.length() + 1), request.getFourDigits());
-            String finalNumber = prefix + randomNumberPart.substring(0, 9);
 
-            if (!allocatedNumberRepository.existsByPhoneNumber(finalNumber)) {
-                generatedNumbers.add(finalNumber);
+        while (out.size() < 5 && attempts < 200) {
+            String prefix = prefixes[rnd.nextInt(prefixes.length)];
+            StringBuilder five = new StringBuilder();
+            for (int i = 0; i < 5; i++) five.append(rnd.nextInt(10));
+            String candidate = prefix + five + req.getFourDigits();
+            if (!allocatedNumberRepository.existsByPhoneNumber(candidate)) {
+                out.add(candidate);
             }
             attempts++;
         }
 
-        if (generatedNumbers.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+        if (out.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+
+        if ("approved".equalsIgnoreCase(curr)) {
+            sr.setStatus("Progress");
+            simRequestRepository.save(sr);
         }
 
-        // --- FIX ---
-        // Only change the status to 'Progress' if it's the first time ('Approved').
-        if ("approved".equalsIgnoreCase(currentStatus)) {
-            simRequest.setStatus("Progress");
-            simRequestRepository.save(simRequest);
-        }
-
-        return ResponseEntity.ok(new ArrayList<>(generatedNumbers));
+        return ResponseEntity.ok(new ArrayList<>(out));
     }
 
+    // ---------------- Select Number ----------------
     @PostMapping("/select-number")
     @Transactional
-    public ResponseEntity<String> selectNumber(@RequestBody SelectNumberRequest selectRequest) {
-        Optional<SimRequest> simRequestOptional = simRequestRepository
-                .findByEmailAndRequestId(selectRequest.getEmail(), selectRequest.getRequestId());
+    public ResponseEntity<String> selectNumber(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody SelectNumberRequest req) {
 
-        if (simRequestOptional.isEmpty() || !"Progress".equalsIgnoreCase(simRequestOptional.get().getStatus())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This request is not in a valid state for number selection.");
+        String email = getEmailFromToken(authHeader);
+
+        var opt = simRequestRepository.findByEmailAndRequestId(email, req.getRequestId());
+        if (opt.isEmpty() || !"Progress".equalsIgnoreCase(opt.get().getStatus())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not in a valid state for number selection.");
         }
 
-        if (allocatedNumberRepository.existsByPhoneNumber(selectRequest.getSelectedNumber())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Sorry, this number was just taken. Please generate a new list.");
+        if (allocatedNumberRepository.existsByPhoneNumber(req.getSelectedNumber())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Number already taken. Generate a new list.");
         }
 
-        AllocatedNumber newAllocation = new AllocatedNumber();
-        newAllocation.setPhoneNumber(selectRequest.getSelectedNumber());
-        newAllocation.setRequestId(selectRequest.getRequestId());
-        allocatedNumberRepository.save(newAllocation);
+        AllocatedNumber alloc = new AllocatedNumber();
+        alloc.setPhoneNumber(req.getSelectedNumber());
+        alloc.setRequestId(req.getRequestId());
+        allocatedNumberRepository.save(alloc);
 
-        SimRequest simRequest = simRequestOptional.get();
-        simRequest.setPhoneNumber(selectRequest.getSelectedNumber());
-        simRequest.setStatus("Provisioning");
-        
-        // --- FIX ---
-        // Set the provisionedAt timestamp so the background scheduler can activate it.
-        simRequest.setProvisionedAt(Instant.now()); 
-        simRequestRepository.save(simRequest);
+        SimRequest sr = opt.get();
+        sr.setPhoneNumber(req.getSelectedNumber());
+        sr.setStatus("Provisioning");
+        sr.setProvisionedAt(Instant.now());
+        simRequestRepository.save(sr);
 
-        return ResponseEntity.ok("Number selected successfully! Your SIM will be activated within 24 hours.");
+        notifyUser(email, "You have selected a number. SIM will be activated within 24 hours.");
+
+        return ResponseEntity.ok("Number selected! Activation within 24 hours.");
     }
 }

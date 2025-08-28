@@ -1,9 +1,9 @@
 spring:
   application:
-    name: document-verification-service
+    name: simapp
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/document_verification_db
+    url: jdbc:postgresql://localhost:5432/simapp_db
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
@@ -17,7 +17,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  port: 8082
+  port: 8086
 
 eureka:
   client:
@@ -25,13 +25,3 @@ eureka:
       defaultZone: http://localhost:8761/eureka
     register-with-eureka: true
     fetch-registry: true
-
-servlet:
-  multipart:
-    max-file-size: 10MB
-    max-request-size: 10MB
-
-openrouter:
-  api-key: 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
-
-debug: true

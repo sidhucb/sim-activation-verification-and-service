@@ -1,9 +1,9 @@
 spring:
   application:
-    name: document-verification-service
+    name: notification-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/document_verification_db
+    url: jdbc:postgresql://localhost:5432/notification_db
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
@@ -16,8 +16,20 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your_email@gmail.com
+    password: your_password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
-  port: 8082
+  port: 8085
 
 eureka:
   client:
@@ -25,13 +37,3 @@ eureka:
       defaultZone: http://localhost:8761/eureka
     register-with-eureka: true
     fetch-registry: true
-
-servlet:
-  multipart:
-    max-file-size: 10MB
-    max-request-size: 10MB
-
-openrouter:
-  api-key: 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
-
-debug: true

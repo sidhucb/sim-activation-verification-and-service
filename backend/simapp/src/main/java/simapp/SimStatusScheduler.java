@@ -11,42 +11,68 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-@Component
-public class SimStatusScheduler {
+//@Component
+//public class SimStatusScheduler {
+//
+//    private static final Logger log = LoggerFactory.getLogger(SimStatusScheduler.class);
+//
+//    @Autowired
+//    private SimRequestRepository simRequestRepository;
+//
+//    /**
+//     * This scheduled task runs every hour to activate SIMs that have been
+//     * in the 'Provisioning' state for at least 24 hours.
+//     */
+//    @Scheduled(fixedRate = 3600000) // 3,600,000 ms = 1 hour
+//    @Transactional
+//    public void activateProvisionedSims() {
+//        log.info("Running scheduled task to activate provisioned SIMs...");
+//
+//        // 1. Find all requests that are currently 'Provisioning'
+//        List<SimRequest> provisioningRequests = simRequestRepository.findByStatus("Provisioning");
+//
+//        if (provisioningRequests.isEmpty()) {
+//            log.info("No SIMs found in 'Provisioning' status.");
+//            return;
+//        }
+//
+//        // 2. The time threshold for activation (24 hours ago)
+//        Instant activationThreshold = Instant.now().minus(24, ChronoUnit.HOURS);
+//
+//        // 3. Iterate and update status if the time has passed
+//        for (SimRequest request : provisioningRequests) {
+//            if (request.getProvisionedAt() != null && request.getProvisionedAt().isBefore(activationThreshold)) {
+//                log.info("Activating SIM for request ID: {}", request.getRequestId());
+//                request.setStatus("Active");
+//                simRequestRepository.save(request);
+//            }
+//        }
+//        log.info("Scheduled activation task finished.");
+//    }
+	
+	// SimStatusScheduler.java
+	@Component
+	public class SimStatusScheduler {
+	    private static final Logger log = LoggerFactory.getLogger(SimStatusScheduler.class);
+	    @Autowired private SimRequestRepository simRequestRepository;
 
-    private static final Logger log = LoggerFactory.getLogger(SimStatusScheduler.class);
+	    @Scheduled(fixedRate = 3600000) // hourly
+	    @Transactional
+	    public void activateProvisionedSims() {
+	        log.info("Checking provisioned SIMs...");
+	        List<SimRequest> provisioning = simRequestRepository.findByStatus("Provisioning");
+	        if (provisioning.isEmpty()) { log.info("None found."); return; }
 
-    @Autowired
-    private SimRequestRepository simRequestRepository;
-
-    /**
-     * This scheduled task runs every hour to activate SIMs that have been
-     * in the 'Provisioning' state for at least 24 hours.
-     */
-    @Scheduled(fixedRate = 3600000) // 3,600,000 ms = 1 hour
-    @Transactional
-    public void activateProvisionedSims() {
-        log.info("Running scheduled task to activate provisioned SIMs...");
-
-        // 1. Find all requests that are currently 'Provisioning'
-        List<SimRequest> provisioningRequests = simRequestRepository.findByStatus("Provisioning");
-
-        if (provisioningRequests.isEmpty()) {
-            log.info("No SIMs found in 'Provisioning' status.");
-            return;
-        }
-
-        // 2. The time threshold for activation (24 hours ago)
-        Instant activationThreshold = Instant.now().minus(24, ChronoUnit.HOURS);
-
-        // 3. Iterate and update status if the time has passed
-        for (SimRequest request : provisioningRequests) {
-            if (request.getProvisionedAt() != null && request.getProvisionedAt().isBefore(activationThreshold)) {
-                log.info("Activating SIM for request ID: {}", request.getRequestId());
-                request.setStatus("Active");
-                simRequestRepository.save(request);
-            }
-        }
-        log.info("Scheduled activation task finished.");
-    }
-}
+	        Instant threshold = Instant.now().minus(24, ChronoUnit.HOURS);
+	        for (SimRequest r : provisioning) {
+	            Instant pAt = r.getProvisionedAt();
+	            if (pAt != null && pAt.isBefore(threshold)) {
+	                r.setStatus("Active");
+	                simRequestRepository.save(r);
+	                log.info("Activated requestId={}", r.getRequestId());
+	                // (optional) call notification-service here
+	            }
+	        }
+	        log.info("Done.");
+	    }
+	}
