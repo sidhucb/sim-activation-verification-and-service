@@ -1,6 +1,6 @@
 package com.example.documentverification.manual;
 
-import com.example.documentverification.JwtUtil;
+import com.example.documentverification.jwt.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;

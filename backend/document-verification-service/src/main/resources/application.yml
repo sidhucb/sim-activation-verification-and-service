@@ -26,11 +26,8 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
   instance:
-    # Makes Eureka use IP instead of hostname to avoid duplicate instance IDs
     prefer-ip-address: true
-    # Optional: explicitly set the IP
     ip-address: 127.0.0.1
-    # Set a unique instance ID to avoid collisions
     instance-id: document-verification-service-8082
 
 servlet:
@@ -42,3 +39,17 @@ openrouter:
   api-key: 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
 
 debug: true
+
+resilience4j:
+  retry:
+    instances:
+      ocrRetry:
+        max-attempts: 3
+        wait-duration: 2s
+  circuitbreaker:
+    instances:
+      ocrCircuit:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+

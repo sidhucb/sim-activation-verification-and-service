@@ -1,4 +1,4 @@
-package com.example.documentverification;
+package com.example.documentverification.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -38,7 +38,7 @@ public class JwtUtil {
         try {
             Claims claims = extractAllClaims(token);
             return !claims.getExpiration().before(new Date());
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }

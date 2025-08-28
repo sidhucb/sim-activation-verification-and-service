@@ -3,7 +3,7 @@ package com.example.documentverification.manual;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.documentverification.MaskingUtil;
+import com.example.documentverification.util.MaskingUtil;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -20,7 +20,7 @@ public class ManualDocumentService {
             // ---------------- Mask ID ----------------
             if (doc.getIdNumber() != null) {
                 if (doc.getIdNumber().length() == 10) {
-                    doc.setIdNumber(MaskingUtil.maskPAN(doc.getIdNumber()));
+                    doc.setIdNumber(MaskingUtil.maskPan(doc.getIdNumber()));
                 } else if (doc.getIdNumber().length() == 12) {
                     doc.setIdNumber(MaskingUtil.maskAadhar(doc.getIdNumber()));
                 }
