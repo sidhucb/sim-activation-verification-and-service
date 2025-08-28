@@ -1,10 +1,6 @@
 package com.example.documentverification;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -13,10 +9,8 @@ public class DocumentDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
-    
-    // NEW: Field to link the document to the user, with explicit column mapping
+
     @Column(name = "user_id")
     private String userId;
 
@@ -27,7 +21,7 @@ public class DocumentDetails {
     private String name;
 
     @Column(name = "dob")
-    private LocalDate dob;
+    private String dob;
 
     @Column(name = "gender")
     private String gender;
@@ -42,113 +36,50 @@ public class DocumentDetails {
     private String cardNumber;
 
     @Column(name = "status")
-    private String status; 
-    
+    private String status;
+
     @Column(name = "sim_eligibility_message")
     private String simEligibilityMessage;
 
     @Column(name = "prepared_at")
     private LocalDateTime preparedAt;
 
-    // Default constructor
-    public DocumentDetails() {
-    }
+    public DocumentDetails() {}
 
-    // Getters and Setters (updated to standard camelCase method names)
-    public Long getId() {
-        return id;
-    }
+    // Getters & Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    // NEW: Getter and Setter for userId
-    public String getUserId() {
-        return userId;
-    }
+    public String getCardType() { return cardType; }
+    public void setCardType(String cardType) { this.cardType = cardType; }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getCardType() {
-        return cardType;
-    }
+    public String getDob() { return dob; }
+    public void setDob(String string) { this.dob = string; }
 
-    public void setCardType(String cardType) {
-        this.cardType = cardType;
-    }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
-    public String getName() {
-        return name;
-    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public Integer getAge() { return age; }
+    public void setAge(Integer age) { this.age = age; }
 
-    public LocalDate getDob() {
-        return dob;
-    }
+    public String getCardNumber() { return cardNumber; }
+    public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
 
-    public void setDob(LocalDate dob) {
-        this.dob = dob;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public String getGender() {
-        return gender;
-    }
+    public String getSimEligibilityMessage() { return simEligibilityMessage; }
+    public void setSimEligibilityMessage(String simEligibilityMessage) { this.simEligibilityMessage = simEligibilityMessage; }
 
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
-
-    public String getCardNumber() {
-        return cardNumber;
-    }
-
-    public void setCardNumber(String cardNumber) {
-        this.cardNumber = cardNumber;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getSimEligibilityMessage() {
-        return simEligibilityMessage;
-    }
-
-    public void setSimEligibilityMessage(String simEligibilityMessage) {
-        this.simEligibilityMessage = simEligibilityMessage;
-    }
-
-    public LocalDateTime getPreparedAt() {
-        return preparedAt;
-    }
-
-    public void setPreparedAt(LocalDateTime preparedAt) {
-        this.preparedAt = preparedAt;
-    }
+    public LocalDateTime getPreparedAt() { return preparedAt; }
+    public void setPreparedAt(LocalDateTime preparedAt) { this.preparedAt = preparedAt; }
 }

@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/document_verification_db
     username: postgres
-    password: Postsid@1
+    password: postgres
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -25,6 +25,13 @@ eureka:
       defaultZone: http://localhost:8761/eureka
     register-with-eureka: true
     fetch-registry: true
+  instance:
+    # Makes Eureka use IP instead of hostname to avoid duplicate instance IDs
+    prefer-ip-address: true
+    # Optional: explicitly set the IP
+    ip-address: 127.0.0.1
+    # Set a unique instance ID to avoid collisions
+    instance-id: document-verification-service-8082
 
 servlet:
   multipart:

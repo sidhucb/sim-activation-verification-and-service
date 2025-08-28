@@ -2,6 +2,7 @@ package com.example.documentverification.manual;
 
 import com.example.documentverification.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,21 +29,25 @@ public class UserDocumentManualController {
         throw new RuntimeException("Missing or invalid Authorization header");
     }
 
-    // ---------------- User endpoints ----------------
-    @PostMapping("/submit")
-    public ResponseEntity<UserDocumentManual> submitManualDetails(
+    @Autowired
+    private ManualDocumentService manualDocumentService;
+
+    @PostMapping("/manual/submit")
+    public ResponseEntity<UserDocumentManual> submitManual(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody UserDocumentManual details
     ) {
-        String token = extractToken(authHeader);
-        if (!jwtUtil.validateToken(token)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
+        String token = authHeader.substring(7);
         Long userId = jwtUtil.extractId(token);
         details.setUserId(userId);
-        details.setStatus("pending");
-        UserDocumentManual saved = repository.save(details);
+
+        // call the service
+        UserDocumentManual saved = manualDocumentService.processManualDocument(details);
+
         return ResponseEntity.ok(saved);
     }
+
+
 
     // ---------------- Admin endpoints ----------------
     @GetMapping("/pending")

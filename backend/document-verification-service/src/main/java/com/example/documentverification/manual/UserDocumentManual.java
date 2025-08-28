@@ -25,8 +25,20 @@ public class UserDocumentManual {
     private String phoneNumber;
     private String email;
 
-    private String status = "pending"; // default pending, admin can approve/reject
+    private String status = "pending"; 
     
+    // default pending, admin can approve/reject
+    
+    private String simEligibilityMessage;
+
+    public String getSimEligibilityMessage() {
+        return simEligibilityMessage;
+    }
+
+    public void setSimEligibilityMessage(String simEligibilityMessage) {
+        this.simEligibilityMessage = simEligibilityMessage;
+    }
+
     public UserDocumentManual() {}
 
     public Long getId() { return id; }
