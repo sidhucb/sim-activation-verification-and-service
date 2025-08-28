@@ -1,13 +1,7 @@
 package com.example.documentverification.manual;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "user_document_manual")
 public class UserDocumentManual {

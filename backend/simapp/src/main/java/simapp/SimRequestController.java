@@ -44,6 +44,15 @@ public class SimRequestController {
         throw new RuntimeException("Missing or invalid Authorization header");
     }
 
+    // Extract userId from JWT token
+    private Long extractUserIdFromToken(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            return jwtUtil.extractId(token);
+        }
+        throw new RuntimeException("Missing or invalid Authorization header");
+    }
+
     // ---------------- Status Check ----------------
     @PostMapping("/status")
     @Transactional
@@ -51,9 +60,9 @@ public class SimRequestController {
             @RequestHeader("Authorization") String authHeader,
             @RequestBody StatusCheckRequest req) {
 
-        String email = getEmailFromToken(authHeader);
+        Long userId = extractUserIdFromToken(authHeader);
 
-        return simRequestRepository.findByEmailAndRequestId(email, req.getRequestId())
+        return simRequestRepository.findByUserIdAndRequestId(userId, req.getRequestId())
                 .map(r -> {
                     String s = Optional.ofNullable(r.getStatus()).orElse("unknown");
                     String msg;
@@ -85,13 +94,13 @@ public class SimRequestController {
             @RequestHeader("Authorization") String authHeader,
             @RequestBody GenerateNumberRequest req) {
 
-        String email = getEmailFromToken(authHeader);
+        Long userId = extractUserIdFromToken(authHeader);
 
         if (req.getFourDigits() == null || !req.getFourDigits().matches("\\d{4}")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("fourDigits must be exactly 4 digits.");
         }
 
-        var opt = simRequestRepository.findByEmailAndRequestId(email, req.getRequestId());
+        var opt = simRequestRepository.findByUserIdAndRequestId(userId, req.getRequestId());
         if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Request not found.");
 
         SimRequest sr = opt.get();
@@ -104,7 +113,7 @@ public class SimRequestController {
 
         Set<String> out = new LinkedHashSet<>();
         Random rnd = new Random();
-        String[] prefixes = {"9","8","7"};
+        String[] prefixes = {"9", "8", "7"};
         int attempts = 0;
 
         while (out.size() < 5 && attempts < 200) {
@@ -135,10 +144,10 @@ public class SimRequestController {
             @RequestHeader("Authorization") String authHeader,
             @RequestBody SelectNumberRequest req) {
 
-        String email = getEmailFromToken(authHeader);
+        Long userId = extractUserIdFromToken(authHeader);
 
-        var opt = simRequestRepository.findByEmailAndRequestId(email, req.getRequestId());
-        if (opt.isEmpty() || !"Progress".equalsIgnoreCase(opt.get().getStatus())) {
+        var opt = simRequestRepository.findByUserIdAndRequestId(userId, req.getRequestId());
+        if (opt.isEmpty() || !"progress".equalsIgnoreCase(opt.get().getStatus())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not in a valid state for number selection.");
         }
 
@@ -157,6 +166,7 @@ public class SimRequestController {
         sr.setProvisionedAt(Instant.now());
         simRequestRepository.save(sr);
 
+        String email = getEmailFromToken(authHeader);
         notifyUser(email, "You have selected a number. SIM will be activated within 24 hours.");
 
         return ResponseEntity.ok("Number selected! Activation within 24 hours.");

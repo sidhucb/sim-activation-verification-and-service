@@ -2,24 +2,24 @@ package com.example.documentverification;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import net.sourceforge.tess4j.TesseractException;
+
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.lang.InterruptedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/documents")
-@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}) 
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class DocumentController {
 
     @Autowired
@@ -31,17 +31,20 @@ public class DocumentController {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // ---------------- User Endpoints ----------------
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/upload")
     public ResponseEntity<?> uploadDocument(
         @RequestParam("cardType") String cardType,
         @RequestParam("image1") MultipartFile image1,
-        @RequestParam(value = "image2", required = false) MultipartFile image2
+        @RequestParam(value = "image2", required = false) MultipartFile image2,
+        Authentication authentication
     ) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String userId = auth.getName(); // logged-in user ID/email
+        Long userId = extractUserIdFromAuth(authentication);
 
         if (image1.isEmpty() || ("Aadhar".equalsIgnoreCase(cardType) && (image2 == null || image2.isEmpty()))) {
             return ResponseEntity.badRequest().body("Please upload all required images.");
@@ -68,11 +71,14 @@ public class DocumentController {
         }
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/pending")
-    public List<DocumentDetails> getPendingDocuments() {
-        return documentRepository.findByStatus("pending");
+    public List<DocumentDetails> getPendingDocuments(Authentication authentication) {
+        Long userId = extractUserIdFromAuth(authentication);
+        return documentRepository.findByUserIdAndStatus(userId, "pending");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/status")
     public ResponseEntity<DocumentDetails> updateStatus(
         @PathVariable Long id,
@@ -91,13 +97,14 @@ public class DocumentController {
         return ResponseEntity.notFound().build();
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/eligibility")
-    public List<Object[]> getEligibilityStatus() {
-        return documentRepository.findEligibilityStatus();
+    public List<Object[]> getEligibilityStatus(Authentication authentication) {
+        Long userId = extractUserIdFromAuth(authentication);
+        return documentRepository.findEligibilityStatusByUserId(userId);
     }
 
     // ---------------- Admin Endpoints ----------------
-    // Only users with ROLE_ADMIN can access these
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
@@ -108,44 +115,21 @@ public class DocumentController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/approve/{id}")
-    public ResponseEntity<DocumentDetails> approveDocument(@PathVariable Long id) {
-        // Fetch the document
+    public ResponseEntity<DocumentDetails> approveDocument(@PathVariable Long id, Authentication authentication) {
         DocumentDetails doc = documentRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Document not found"));
 
-        // Update status
         doc.setStatus("Approved");
         documentRepository.save(doc);
 
-        // Extract uploader email from document (userId field)
-        String uploaderEmail = doc.getUserId(); // "shonnappan@gmail.com" for example
+        // Extract userId and email from JWT for sending to SimApp
+        Long userId = doc.getUserId();
+        String email = extractEmailFromAuth(authentication);
 
-        // Create a SIM request in SimApp for the correct user with status "Approved"
-        createSimRequestInSimApp(uploaderEmail, "Approved");
+        createSimRequestInSimApp(userId, email, "Approved");
 
         return ResponseEntity.ok(doc);
     }
-
-    
-    private void createSimRequestInSimApp(String userEmail, String status) {
-        String simappUrl = "http://localhost:8086/api/sim/requests";
-        Map<String, Object> payload = new HashMap<>();
-
-        payload.put("requestId", "REQ-" + System.currentTimeMillis());
-        payload.put("email", userEmail);
-        String username = userEmail.contains("@") ? userEmail.split("@")[0] : userEmail;
-        payload.put("username", username);
-
-        // Set status based on document approval
-        payload.put("status", status);
-
-        try {
-            restTemplate.postForEntity(simappUrl, payload, String.class);
-        } catch (Exception e) {
-            System.err.println("Failed to create SIM request for " + userEmail + ": " + e.getMessage());
-        }
-    }
-
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/reject/{id}")
@@ -157,4 +141,45 @@ public class DocumentController {
         return ResponseEntity.ok(doc);
     }
 
+
+    // ---------------- Helper methods ----------------
+
+    private Long extractUserIdFromAuth(Authentication authentication) {
+        String token = "";
+        try {
+            token = authentication.getCredentials().toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get JWT token from Authentication object");
+        }
+        return jwtUtil.extractId(token);
+    }
+
+    private String extractEmailFromAuth(Authentication authentication) {
+        String token = "";
+        try {
+            token = authentication.getCredentials().toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get JWT token from Authentication object");
+        }
+        return jwtUtil.extractUsername(token);
+    }
+
+    private void createSimRequestInSimApp(Long userId, String userEmail, String status) {
+        String simappUrl = "http://localhost:8086/api/sim/requests";
+        Map<String, Object> payload = new HashMap<>();
+
+        payload.put("requestId", "REQ-" + System.currentTimeMillis());
+        payload.put("userId", userId);
+        payload.put("email", userEmail);
+        String username = userEmail.contains("@") ? userEmail.split("@")[0] : userEmail;
+        payload.put("username", username);
+
+        payload.put("status", status);
+
+        try {
+            restTemplate.postForEntity(simappUrl, payload, String.class);
+        } catch (Exception e) {
+            System.err.println("Failed to create SIM request for userId " + userId + ": " + e.getMessage());
+        }
+    }
 }

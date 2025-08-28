@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/document_verification_db
     username: postgres
-    password: password
+    password: Postsid@1
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -32,6 +32,6 @@ servlet:
     max-request-size: 10MB
 
 openrouter:
-  api-key: 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
+  api-key: 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
 
 debug: true

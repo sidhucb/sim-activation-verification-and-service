@@ -18,7 +18,7 @@ public class DocumentDetails {
     
     // NEW: Field to link the document to the user, with explicit column mapping
     @Column(name = "user_id")
-    private String userId;
+    private Long userId;
 
     @Column(name = "card_type")
     private String cardType;
@@ -64,11 +64,11 @@ public class DocumentDetails {
     }
 
     // NEW: Getter and Setter for userId
-    public String getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 

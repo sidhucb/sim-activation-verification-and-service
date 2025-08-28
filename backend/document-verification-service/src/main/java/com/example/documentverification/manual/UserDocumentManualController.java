@@ -28,13 +28,17 @@ public class UserDocumentManualController {
     private RestTemplate restTemplate;
 
     // ---------------- User endpoints ----------------
+
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/submit")
     public ResponseEntity<UserDocumentManual> submitManualDetails(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody UserDocumentManual details
     ) {
         String token = extractToken(authHeader);
-        if (!jwtUtil.validateToken(token)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!jwtUtil.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         Long userId = jwtUtil.extractId(token);
         details.setUserId(userId);
@@ -43,7 +47,20 @@ public class UserDocumentManualController {
         return ResponseEntity.ok(saved);
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/my-docs")
+    public ResponseEntity<List<UserDocumentManual>> getMyDocs(@RequestHeader("Authorization") String authHeader) {
+        String token = extractToken(authHeader);
+        if (!jwtUtil.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Long userId = jwtUtil.extractId(token);
+        List<UserDocumentManual> list = repository.findByUserId(userId);
+        return ResponseEntity.ok(list);
+    }
+
     // ---------------- Admin endpoints ----------------
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/pending")
     public ResponseEntity<List<UserDocumentManual>> getPending() {
@@ -53,7 +70,8 @@ public class UserDocumentManualController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/approve")
     public ResponseEntity<UserDocumentManual> approve(
-            @PathVariable Long id
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader
     ) {
         Optional<UserDocumentManual> optional = repository.findById(id);
         if (optional.isPresent()) {
@@ -61,9 +79,10 @@ public class UserDocumentManualController {
             doc.setStatus("approved");
             repository.save(doc);
 
-            // Use the uploader's email from the document instead of admin's JWT
-            String uploaderEmail = doc.getEmail();
-            createSimRequestInSimApp(uploaderEmail, "Approved");
+            String token = extractToken(authHeader);
+            String email = jwtUtil.extractUsername(token); // Extract email from admin's token (or get from doc.getEmail())
+
+            createSimRequestInSimApp(doc.getUserId(), email, "Approved");
 
             return ResponseEntity.ok(doc);
         }
@@ -93,18 +112,22 @@ public class UserDocumentManualController {
     }
 
     // ---------------- Helper methods ----------------
-    private void createSimRequestInSimApp(String email, String status) {
-        String simappUrl = "http://localhost:8086/api/sim/requests"; // simapp endpoint
+
+    private void createSimRequestInSimApp(Long userId, String userEmail, String status) {
+        String simappUrl = "http://localhost:8086/api/sim/requests";
         Map<String, Object> payload = new HashMap<>();
         payload.put("requestId", "REQ-" + System.currentTimeMillis()); // unique request id
-        payload.put("email", email);
+        payload.put("userId", userId);
+        payload.put("email", userEmail);
+        String username = userEmail.contains("@") ? userEmail.split("@")[0] : userEmail;
+        payload.put("username", username);
         payload.put("status", status);
 
-        // Optional: set username based on email prefix
-        String username = email.contains("@") ? email.split("@")[0] : email;
-        payload.put("username", username);
-
-        restTemplate.postForEntity(simappUrl, payload, String.class);
+        try {
+            restTemplate.postForEntity(simappUrl, payload, String.class);
+        } catch (Exception e) {
+            System.err.println("Failed to create SIM request for userId " + userId + ": " + e.getMessage());
+        }
     }
 
     private String extractToken(String authHeader) {

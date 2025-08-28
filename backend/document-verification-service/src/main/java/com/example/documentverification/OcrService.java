@@ -27,7 +27,7 @@ public class OcrService {
     private LlmService llmService;
 
     // ADDED: userId parameter to match the method call from the controller
-    public DocumentDetails processDocument(String cardType, MultipartFile image1, MultipartFile image2, String userId)
+    public DocumentDetails processDocument(String cardType, MultipartFile image1, MultipartFile image2, Long userId)
             throws IOException, TesseractException, ExecutionException, InterruptedException {
 
         Tesseract tesseract = new Tesseract();

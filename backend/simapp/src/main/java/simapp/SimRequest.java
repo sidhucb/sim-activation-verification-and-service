@@ -18,8 +18,8 @@ public class SimRequest {
 
     private String requestId;
     private String username;
-    private String email;
-
+    private Long userId;
+    
     @Column(name = "simstatus")
     private String status;
 
@@ -60,12 +60,12 @@ public class SimRequest {
         this.username = username;
     }
 
-    public String getEmail() {
-        return email;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getStatus() {
