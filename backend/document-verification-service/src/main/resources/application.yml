@@ -44,12 +44,19 @@ resilience4j:
   retry:
     instances:
       ocrRetry:
-        max-attempts: 3
+        max-attempts: 2
         wait-duration: 2s
+
   circuitbreaker:
     instances:
-      ocrCircuit:
-        sliding-window-size: 10
-        failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
+      ocrCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 6
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 2
+
+aws:
+  region: us-east-1  # set your region
 
