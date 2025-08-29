@@ -9,4 +9,5 @@ import java.util.List;
 public interface UserDocumentManualRepository extends JpaRepository<UserDocumentManual, Long> {
     List<UserDocumentManual> findByStatus(String status);
     List<UserDocumentManual> findByUserId(Long userId);
+    List<UserDocumentManual> findByUserIdAndStatus(Long userId, String status);
 }

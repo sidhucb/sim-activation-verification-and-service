@@ -26,6 +26,9 @@ public class UserDocumentManualController {
 
     @Autowired
     private RestTemplate restTemplate;
+    
+    @Autowired
+    private SimRequestCoordinationService simCoordinationService;
 
     // ---------------- User endpoints ----------------
 
@@ -71,22 +74,21 @@ public class UserDocumentManualController {
     @PutMapping("/{id}/approve")
     public ResponseEntity<UserDocumentManual> approve(
             @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader
-    ) {
+            @RequestHeader("Authorization") String authHeader) {
+
         Optional<UserDocumentManual> optional = repository.findById(id);
         if (optional.isPresent()) {
             UserDocumentManual doc = optional.get();
             doc.setStatus("approved");
             repository.save(doc);
 
-            String token = extractToken(authHeader);
-            String email = jwtUtil.extractUsername(token); // Extract email from admin's token (or get from doc.getEmail())
+            Long userId = doc.getUserId();
+            String adminEmail = jwtUtil.extractUsername(extractToken(authHeader));
 
-            createSimRequestInSimApp(doc.getUserId(), email, "Approved");
+            simCoordinationService.checkAndCreateSimRequestForUser(userId, adminEmail);
 
             return ResponseEntity.ok(doc);
         }
-
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
@@ -112,23 +114,6 @@ public class UserDocumentManualController {
     }
 
     // ---------------- Helper methods ----------------
-
-    private void createSimRequestInSimApp(Long userId, String userEmail, String status) {
-        String simappUrl = "http://localhost:8086/api/sim/requests";
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("requestId", "REQ-" + System.currentTimeMillis()); // unique request id
-        payload.put("userId", userId);
-        payload.put("email", userEmail);
-        String username = userEmail.contains("@") ? userEmail.split("@")[0] : userEmail;
-        payload.put("username", username);
-        payload.put("status", status);
-
-        try {
-            restTemplate.postForEntity(simappUrl, payload, String.class);
-        } catch (Exception e) {
-            System.err.println("Failed to create SIM request for userId " + userId + ": " + e.getMessage());
-        }
-    }
 
     private String extractToken(String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

@@ -2,11 +2,13 @@ package com.example.documentverification;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.example.documentverification.manual.SimRequestCoordinationService;
+
 import net.sourceforge.tess4j.TesseractException;
 
 import java.io.IOException;
@@ -27,24 +29,27 @@ public class DocumentController {
 
     @Autowired
     private DocumentRepository documentRepository;
-    
+
     @Autowired
     private RestTemplate restTemplate;
 
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @Autowired
+    private SimRequestCoordinationService simCoordinationService;
 
     // ---------------- User Endpoints ----------------
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/upload")
     public ResponseEntity<?> uploadDocument(
-        @RequestParam("cardType") String cardType,
-        @RequestParam("image1") MultipartFile image1,
-        @RequestParam(value = "image2", required = false) MultipartFile image2,
-        Authentication authentication
-    ) {
-        Long userId = extractUserIdFromAuth(authentication);
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam("cardType") String cardType,
+            @RequestParam("image1") MultipartFile image1,
+            @RequestParam(value = "image2", required = false) MultipartFile image2) {
+
+        Long userId = extractUserIdFromAuthHeader(authHeader);
 
         if (image1.isEmpty() || ("Aadhar".equalsIgnoreCase(cardType) && (image2 == null || image2.isEmpty()))) {
             return ResponseEntity.badRequest().body("Please upload all required images.");
@@ -73,17 +78,16 @@ public class DocumentController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/pending")
-    public List<DocumentDetails> getPendingDocuments(Authentication authentication) {
-        Long userId = extractUserIdFromAuth(authentication);
-        return documentRepository.findByUserIdAndStatus(userId, "pending");
+    public List<DocumentDetails> getPendingDocuments(@RequestHeader("Authorization") String authHeader) {
+        Long userId = extractUserIdFromAuthHeader(authHeader);
+        return documentRepository.findByUserIdAndStatus(userId, "Pending");
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/status")
     public ResponseEntity<DocumentDetails> updateStatus(
-        @PathVariable Long id,
-        @RequestParam String status
-    ) {
+            @PathVariable Long id,
+            @RequestParam String status) {
         Optional<DocumentDetails> optionalDocument = documentRepository.findById(id);
         if (optionalDocument.isPresent()) {
             DocumentDetails document = optionalDocument.get();
@@ -99,8 +103,8 @@ public class DocumentController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/eligibility")
-    public List<Object[]> getEligibilityStatus(Authentication authentication) {
-        Long userId = extractUserIdFromAuth(authentication);
+    public List<Object[]> getEligibilityStatus(@RequestHeader("Authorization") String authHeader) {
+        Long userId = extractUserIdFromAuthHeader(authHeader);
         return documentRepository.findEligibilityStatusByUserId(userId);
     }
 
@@ -115,18 +119,20 @@ public class DocumentController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/approve/{id}")
-    public ResponseEntity<DocumentDetails> approveDocument(@PathVariable Long id, Authentication authentication) {
-        DocumentDetails doc = documentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Document not found"));
+    public ResponseEntity<DocumentDetails> approveDocument(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
 
-        doc.setStatus("Approved");
+        DocumentDetails doc = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        doc.setStatus("approved"); // use lowercase for consistency
         documentRepository.save(doc);
 
-        // Extract userId and email from JWT for sending to SimApp
         Long userId = doc.getUserId();
-        String email = extractEmailFromAuth(authentication);
+        String adminEmail = extractEmailFromAuthHeader(authHeader);
 
-        createSimRequestInSimApp(userId, email, "Approved");
+        simCoordinationService.checkAndCreateSimRequestForUser(userId, adminEmail);
 
         return ResponseEntity.ok(doc);
     }
@@ -135,51 +141,34 @@ public class DocumentController {
     @PutMapping("/reject/{id}")
     public ResponseEntity<DocumentDetails> rejectDocument(@PathVariable Long id) {
         DocumentDetails doc = documentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Document not found"));
+                .orElseThrow(() -> new RuntimeException("Document not found"));
         doc.setStatus("Rejected");
         documentRepository.save(doc);
         return ResponseEntity.ok(doc);
     }
 
-
     // ---------------- Helper methods ----------------
 
-    private Long extractUserIdFromAuth(Authentication authentication) {
-        String token = "";
-        try {
-            token = authentication.getCredentials().toString();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get JWT token from Authentication object");
+    private Long extractUserIdFromAuthHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT token");
         }
         return jwtUtil.extractId(token);
     }
 
-    private String extractEmailFromAuth(Authentication authentication) {
-        String token = "";
-        try {
-            token = authentication.getCredentials().toString();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get JWT token from Authentication object");
+    private String extractEmailFromAuthHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT token");
         }
         return jwtUtil.extractUsername(token);
     }
 
-    private void createSimRequestInSimApp(Long userId, String userEmail, String status) {
-        String simappUrl = "http://localhost:8086/api/sim/requests";
-        Map<String, Object> payload = new HashMap<>();
-
-        payload.put("requestId", "REQ-" + System.currentTimeMillis());
-        payload.put("userId", userId);
-        payload.put("email", userEmail);
-        String username = userEmail.contains("@") ? userEmail.split("@")[0] : userEmail;
-        payload.put("username", username);
-
-        payload.put("status", status);
-
-        try {
-            restTemplate.postForEntity(simappUrl, payload, String.class);
-        } catch (Exception e) {
-            System.err.println("Failed to create SIM request for userId " + userId + ": " + e.getMessage());
-        }
-    }
 }

@@ -90,7 +90,7 @@ public class OcrService {
                 details.setStatus("Rejected: Underage");
                 details.setSimEligibilityMessage("Not eligible for SIM card in India. According to the Indian Contract Act, 1872, only individuals aged 18 or above can enter into a legally binding contract.");
             } else {
-                details.setStatus("Verified");
+                details.setStatus("Pending");
                 details.setSimEligibilityMessage("Eligible for SIM card.");
             }
         } else {
