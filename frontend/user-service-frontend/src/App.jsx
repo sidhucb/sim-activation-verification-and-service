@@ -8,6 +8,10 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/UserManagement";
 import UnifiedKycApproval from "./pages/UnifiedKycApproval"; // import new page
 import Navbar from "./components/Navbar";
+import UserKycDashboard from "./pages/UserKycDashboard"; // import the new page
+import CheckSimStatus from "./pages/CheckSimStatus";
+
+
 
 // MOCK AUTH HOOK FOR DEMONSTRATION
 // In your real app, this would get state from a context
@@ -19,20 +23,25 @@ const useAuth = () => {
   return user;
 };
 
+
 // PROTECTED ROUTE COMPONENT
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { isLoggedIn, role } = useAuth(); // Use your actual auth hook
+
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
 
+
   if (requiredRole && role !== requiredRole) {
     return <Navigate to="/dashboard" replace />;
   }
 
+
   return children;
 };
+
 
 function App() {
   return (
@@ -75,9 +84,28 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* New route for user KYC dashboard */}
+        <Route
+          path="/dashboard/kyc"
+          element={
+            <ProtectedRoute>
+                <UserKycDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/check-status"
+          element={
+            <ProtectedRoute>
+              <CheckSimStatus />
+            </ProtectedRoute>
+          }
+        />
+
       </Routes>
     </Router>
   );
 }
+
 
 export default App;

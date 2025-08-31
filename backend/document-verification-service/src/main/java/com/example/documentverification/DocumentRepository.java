@@ -18,7 +18,7 @@ public interface DocumentRepository extends JpaRepository<DocumentDetails, Long>
            nativeQuery = true)
     List<Object[]> findEligibilityStatus();
 
-    @Query(value = "SELECT id, name, age, address, " +
+    @Query(value = "SELECT id, name, age, address, status, " +
                    "CASE WHEN age < 18 " +
                    "THEN 'Not eligible for SIM (below 18 as per Indian law)' " +
                    "ELSE 'Eligible for SIM' END AS eligibility_status " +

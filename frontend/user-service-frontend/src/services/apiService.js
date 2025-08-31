@@ -4,6 +4,7 @@ import axios from "axios";
 // Make sure these ports match your running backend services
 const USER_SERVICE_BASE_URL = "http://localhost:8081";
 const DOCUMENT_SERVICE_BASE_URL = "http://localhost:8082"; 
+const SIM_SERVICE_BASE_URL = "http://localhost:8086";
 
 // Create reusable axios instances for each service
 const userClient = axios.create({
@@ -27,6 +28,10 @@ const getAuthHeaders = () => {
     },
   };
 };
+
+const simClient = axios.create({
+  baseURL: SIM_SERVICE_BASE_URL,
+});
 
 // --- User Service APIs (for both users and admins) ---
 
@@ -117,7 +122,7 @@ export const getPendingManualDocs = async () => {
 export const getPendingOcrDocs = async () => {
   try {
     // Note: The backend endpoint is '/api/documents/pending'
-    const response = await documentClient.get("/api/documents/pending", getAuthHeaders());
+    const response = await documentClient.get("/api/documents/pending/all", getAuthHeaders());
     return response.data;
   } catch (err) {
     console.error("Get pending OCR docs error:", err);
@@ -172,5 +177,27 @@ export const getAllOcrDocuments = async () => {
   } catch (err) {
     console.error("Get all OCR docs error:", err);
     throw new Error(err.response?.data?.message || "Failed to fetch all OCR documents.");
+  }
+};
+
+// Generate SIM numbers - POST /api/sim/generate-number
+export const generateNumber = async ({ fourDigits }) => {
+  try {
+    const response = await simClient.post("/api/sim/generate-number", { fourDigits }, getAuthHeaders());
+    return response.data; // expects array of generated numbers
+  } catch (err) {
+    console.error("Generate number error:", err);
+    throw new Error(err.response?.data || "Failed to generate numbers.");
+  }
+};
+
+// Select SIM number - POST /api/sim/select-number
+export const selectNumber = async ({ selectedNumber }) => {
+  try {
+    const response = await simClient.post("/api/sim/select-number", { selectedNumber }, getAuthHeaders());
+    return response.data;
+  } catch (err) {
+    console.error("Select number error:", err);
+    throw new Error(err.response?.data || "Failed to select number.");
   }
 };

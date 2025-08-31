@@ -115,80 +115,82 @@ export default function UnifiedKycApproval() {
     <div className="page-container">
       <h1 className="page-title">Unified KYC Approval</h1>
       <Card>
-        <table className="kyc-table">
-          <thead>
-            <tr>
-              <th rowSpan={2}>User ID</th>
-              <th colSpan={6}>Manual Entry</th>
-              <th colSpan={8}>OCR Extracted</th>
-              <th rowSpan={2}>Actions</th>
-            </tr>
-            <tr>
-              <th>Full Name</th>
-              <th>DOB</th>
-              <th>Address</th>
-              <th>ID Number</th>
-              <th>Phone</th>
-              <th>Email</th>
-
-              <th>Card Type</th>
-              <th>Name</th>
-              <th>DOB</th>
-              <th>Gender</th>
-              <th>Address</th>
-              <th>Card Number</th>
-              <th>Status</th>
-              <th>Eligibility Msg</th>
-            </tr>
-          </thead>
-          <tbody>
-            {combinedKycList.map(({ userId, manual, ocr }) => (
-              <tr key={userId}>
-                <td data-label="User ID">{userId}</td>
-
-                <td data-label="Full Name">{manual?.fullName || "—"}</td>
-                <td data-label="DOB">{manual?.dob || "—"}</td>
-                <td data-label="Address">{manual?.address || "—"}</td>
-                <td data-label="ID Number">{manual?.idNumber || "—"}</td>
-                <td data-label="Phone">{manual?.phoneNumber || "—"}</td>
-                <td data-label="Email">{manual?.email || "—"}</td>
-
-                <td data-label="Card Type">{ocr?.cardType || "—"}</td>
-                <td data-label="Name">{ocr?.name || "—"}</td>
-                <td data-label="DOB">{ocr?.dob || "—"}</td>
-                <td data-label="Gender">{ocr?.gender || "—"}</td>
-                <td data-label="Address">{ocr?.address || "—"}</td>
-                <td data-label="Card Number">{ocr?.cardNumber || "—"}</td>
-                <td data-label="Status">{ocr?.status || "—"}</td>
-                <td data-label="Eligibility Msg">{ocr?.simEligibilityMessage || "—"}</td>
-
-                <td data-label="Actions" className="actions-cell">
-                  {manual && (
-                    <>
-                      <Button onClick={() => handleApproveManual(manual.id)} className="btn-approve">
-                        Approve Manual
-                      </Button>
-                      <Button onClick={() => handleRejectManual(manual.id)} className="btn-reject">
-                        Reject Manual
-                      </Button>
-                    </>
-                  )}
-                  {ocr && (
-                    <>
-                      <Button onClick={() => handleApproveOcr(ocr.id)} className="btn-approve">
-                        Approve OCR
-                      </Button>
-                      <Button onClick={() => handleRejectOcr(ocr.id)} className="btn-reject">
-                        Reject OCR
-                      </Button>
-                    </>
-                  )}
-                  {!manual && !ocr && <span>—</span>}
-                </td>
+        <div className="table-container">
+          <table className="kyc-table">
+            <thead>
+              <tr>
+                <th rowSpan={2}>User ID</th>
+                <th colSpan={6}>Manual Entry</th>
+                <th colSpan={8}>OCR Extracted</th>
+                <th rowSpan={2}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+              <tr>
+                <th>Full Name</th>
+                <th>DOB</th>
+                <th>Address</th>
+                <th>ID Number</th>
+                <th>Phone</th>
+                <th>Email</th>
+
+                <th>Card Type</th>
+                <th>Name</th>
+                <th>DOB</th>
+                <th>Gender</th>
+                <th>Address</th>
+                <th>Card Number</th>
+                <th>Status</th>
+                <th>Eligibility Msg</th>
+              </tr>
+            </thead>
+            <tbody>
+              {combinedKycList.map(({ userId, manual, ocr }) => (
+                <tr key={userId}>
+                  <td data-label="User ID">{userId}</td>
+
+                  <td data-label="Full Name">{manual?.fullName || "—"}</td>
+                  <td data-label="DOB">{manual?.dob || "—"}</td>
+                  <td data-label="Address">{manual?.address || "—"}</td>
+                  <td data-label="ID Number">{manual?.idNumber || "—"}</td>
+                  <td data-label="Phone">{manual?.phoneNumber || "—"}</td>
+                  <td data-label="Email">{manual?.email || "—"}</td>
+
+                  <td data-label="Card Type">{ocr?.cardType || "—"}</td>
+                  <td data-label="Name">{ocr?.name || "—"}</td>
+                  <td data-label="DOB">{ocr?.dob || "—"}</td>
+                  <td data-label="Gender">{ocr?.gender || "—"}</td>
+                  <td data-label="Address">{ocr?.address || "—"}</td>
+                  <td data-label="Card Number">{ocr?.cardNumber || "—"}</td>
+                  <td data-label="Status">{ocr?.status || "—"}</td>
+                  <td data-label="Eligibility Msg">{ocr?.simEligibilityMessage || "—"}</td>
+
+                  <td data-label="Actions" className="actions-cell">
+                    {manual && (
+                      <>
+                        <Button onClick={() => handleApproveManual(manual.id)} className="btn-approve">
+                          Approve Manual
+                        </Button>
+                        <Button onClick={() => handleRejectManual(manual.id)} className="btn-reject">
+                          Reject Manual
+                        </Button>
+                      </>
+                    )}
+                    {ocr && (
+                      <>
+                        <Button onClick={() => handleApproveOcr(ocr.id)} className="btn-approve">
+                          Approve OCR
+                        </Button>
+                        <Button onClick={() => handleRejectOcr(ocr.id)} className="btn-reject">
+                          Reject OCR
+                        </Button>
+                      </>
+                    )}
+                    {!manual && !ocr && <span>—</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </div>
   );

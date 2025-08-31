@@ -32,6 +32,6 @@ servlet:
     max-request-size: 10MB
 
 openrouter:
-  api-key: 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
+  api-key: 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
 
 debug: true

@@ -80,7 +80,7 @@ public class DocumentController {
     @GetMapping("/pending")
     public List<DocumentDetails> getPendingDocuments(@RequestHeader("Authorization") String authHeader) {
         Long userId = extractUserIdFromAuthHeader(authHeader);
-        return documentRepository.findByUserIdAndStatus(userId, "Pending");
+        return documentRepository.findByUserIdAndStatus(userId, "pending");
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -109,6 +109,14 @@ public class DocumentController {
     }
 
     // ---------------- Admin Endpoints ----------------
+    
+ // New endpoint for admin to get all pending OCR documents
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/pending/all")
+    public ResponseEntity<List<DocumentDetails>> getAllPendingDocuments() {
+        List<DocumentDetails> pendingDocs = documentRepository.findByStatus("pending");
+        return ResponseEntity.ok(pendingDocs);
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
