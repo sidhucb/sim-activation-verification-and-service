@@ -30,9 +30,14 @@ public class SimRequestCoordinationService {
         boolean isManualApproved = manualRepository.findByUserIdAndStatus(userId, "approved").size() > 0;
 
         if (isOcrApproved && isManualApproved) {
-            createSimRequestInSimApp(userId, adminEmail, "Approved");
+            String userEmail = fetchUserEmail(userId);
+            if (userEmail != null) {
+                createSimRequestInSimApp(userId, userEmail, "Approved");  // Pass actual user email here
+                sendKycApprovedNotification(userId, userEmail);
+            } else {
+                System.err.println("User email not found for userId=" + userId + ". Sim request and notification skipped.");
+            }
         }
-        // Add logic to handle rejection or partial approvals if needed
     }
 
     private void createSimRequestInSimApp(Long userId, String userEmail, String status) {
@@ -52,5 +57,30 @@ public class SimRequestCoordinationService {
             System.err.println("Failed to create SIM request for userId " + userId + ": " + e.getMessage());
         }
     }
+    
+    private void sendKycApprovedNotification(Long userId, String recipientEmail) {
+        String url = "http://localhost:8085/notifications/send";
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("userId", userId);
+        payload.put("recipientEmail", recipientEmail);
+        payload.put("subject", "KYC Approved");
+        payload.put("message", "Your KYC has been approved and you can now generate your SIM number.");
+        restTemplate.postForEntity(url, payload, String.class);
+    }
+
+    
+    private String fetchUserEmail(Long userId) {
+        String userServiceUrl = "http://localhost:8081/users/" + userId; // Adjust the URL
+        try {
+            Map<String, Object> response = restTemplate.getForObject(userServiceUrl, Map.class);
+            if (response != null && response.containsKey("email")) {
+                return (String) response.get("email");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to fetch user email for userId " + userId + ": " + e.getMessage());
+        }
+        return null;
+    }
+
 }
 

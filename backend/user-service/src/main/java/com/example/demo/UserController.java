@@ -56,5 +56,13 @@ public class UserController {
             return ResponseEntity.status(401).body(e.getMessage());
         }
     }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        return userService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
 
 }

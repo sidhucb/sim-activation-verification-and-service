@@ -42,5 +42,10 @@ public class UserService {
 
         return jwtUtil.generateToken(user);
     }
+    
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
 
 }
