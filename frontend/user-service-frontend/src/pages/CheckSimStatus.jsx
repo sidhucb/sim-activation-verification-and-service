@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   getEligibilityStatus,
+  getSimRequestStatus,
   generateNumber,
   selectNumber,
 } from "../services/apiService";
@@ -25,19 +26,24 @@ export default function CheckSimStatus() {
   async function fetchStatus() {
     setLoading(true);
     try {
+      // Fetch KYC eligibility status
       const response = await getEligibilityStatus();
       if (Array.isArray(response) && response.length > 0) {
         const firstRow = response[0];
-        // Extract fields by array indexes based on backend query:
-        // For example: id=0, name=1, age=2, address=3, status=4, eligibility_msg=5
+        // Fields: id=0, name=1, age=2, address=3, status=4, eligibility_msg=5
         setKycStatus(firstRow[4] || "");
         setEligibilityMsg(firstRow[5] || "");
       } else {
         setKycStatus("");
         setEligibilityMsg("");
       }
-    } catch {
+
+      // Fetch actual SIM request lifecycle status
+      const simReqStatus = await getSimRequestStatus();
+      setSimStatus(simReqStatus || "");
+    } catch (error) {
       setErrorMsg("Failed to load status");
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -82,7 +88,7 @@ export default function CheckSimStatus() {
   if (loading) return <p>Loading status...</p>;
 
   return (
-    <div>
+    <div className="check-sim-page">
       <h1>Check SIM Status</h1>
 
       <Card>

@@ -12,7 +12,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/sim")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:5173")
 public class SimRequestController {
 
     @Autowired
@@ -186,5 +186,17 @@ public class SimRequestController {
 
         return ResponseEntity.ok("Number selected! Activation within 24 hours.");
     }
+    
+    @GetMapping("/requests/status")
+    public ResponseEntity<String> getSimRequestStatus(@RequestHeader("Authorization") String authHeader) {
+        Long userId = extractUserIdFromToken(authHeader);
+        Optional<SimRequest> simRequest = simRequestRepository.findByUserId(userId);
+        if (simRequest.isPresent()) {
+            return ResponseEntity.ok(simRequest.get().getStatus().toLowerCase());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("none");
+        }
+    }
+
 
 }

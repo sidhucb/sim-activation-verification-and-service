@@ -4,6 +4,7 @@
   color: var(--text-color);
   font-family: system-ui, sans-serif;
   padding: 1rem;
+  padding-top: 300px; /* Added padding-top to avoid navbar overlap */
 }
 
 .check-sim-page h1 {

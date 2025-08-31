@@ -201,3 +201,13 @@ export const selectNumber = async ({ selectedNumber }) => {
     throw new Error(err.response?.data || "Failed to select number.");
   }
 };
+
+export const getSimRequestStatus = async () => {
+  try {
+    const response = await simClient.get("/api/sim/requests/status", getAuthHeaders());
+    return response.data; // Expects status string like "approved"
+  } catch (err) {
+    console.error("Get SIM request status error:", err);
+    throw new Error(err.response?.data || "Failed to get SIM request status.");
+  }
+};

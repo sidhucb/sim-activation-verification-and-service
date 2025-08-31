@@ -17,4 +17,6 @@ public interface SimRequestRepository extends JpaRepository<SimRequest, Long> {
     Optional<SimRequest> findByUserIdAndStatusIn(Long userId, Collection<String> statuses);
     
     Optional<SimRequest> findByUserIdAndStatus(Long userId, String status);
+    
+    Optional<SimRequest> findByUserId(Long userId);
 }
