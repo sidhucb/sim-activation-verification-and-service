@@ -32,8 +32,6 @@ public class DocumentDetails {
     @Column(name = "gender")
     private String gender;
 
-    @Column(name = "address")
-    private String address;
 
     @Column(name = "age")
     private Integer age;
@@ -102,14 +100,6 @@ public class DocumentDetails {
 
     public void setGender(String gender) {
         this.gender = gender;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
     }
 
     public Integer getAge() {

@@ -6,11 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.HashMap;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -25,16 +22,15 @@ public class UserDocumentManualController {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private RestTemplate restTemplate;
-    
-    @Autowired
     private SimRequestCoordinationService simCoordinationService;
 
     // ---------------- User endpoints ----------------
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/submit")
+    @CircuitBreaker(name = "manualService", fallbackMethod = "manualFallback")
     public ResponseEntity<UserDocumentManual> submitManualDetails(
+    		
             @RequestHeader("Authorization") String authHeader,
             @RequestBody UserDocumentManual details
     ) {
@@ -45,11 +41,48 @@ public class UserDocumentManualController {
 
         Long userId = jwtUtil.extractId(token);
         details.setUserId(userId);
-        details.setStatus("pending");
+
+        // --- Card Number Validation & Masking ---
+        if (details.getCardNumber() != null) {
+            String rawCardNumber = details.getCardNumber().replaceAll("\\s", "").toUpperCase();
+
+            if ("Aadhar".equalsIgnoreCase(details.getCardType())) {
+                if (rawCardNumber.matches("^\\d{12}$")) {
+                    details.setCardNumber(maskAadhar(rawCardNumber));
+                    details.setStatus("pending");
+                } else {
+                    details.setCardNumber(null);
+                    details.setStatus("rejected");
+                    details.setSimEligibilityMessage("Invalid Aadhar number format.");
+                    return ResponseEntity.ok(details);
+                }
+            } else if ("PAN".equalsIgnoreCase(details.getCardType())) {
+                if (rawCardNumber.matches("^[A-Z]{5}[0-9]{4}[A-Z]$")) {
+                    details.setCardNumber(maskPan(rawCardNumber));
+                    details.setStatus("pending");
+                } else {
+                    details.setCardNumber(null);
+                    details.setStatus("rejected");
+                    details.setSimEligibilityMessage("Invalid PAN number format.");
+                    return ResponseEntity.ok(details);
+                }
+            } else {
+                details.setCardNumber(rawCardNumber);
+                details.setStatus("pending");
+            }
+        } else {
+            details.setStatus("pending");
+        }
+
         UserDocumentManual saved = repository.save(details);
         return ResponseEntity.ok(saved);
     }
-
+    
+    public ResponseEntity<UserDocumentManual> manualFallback(String authHeader, UserDocumentManual details, Throwable ex) {
+        details.setStatus("pending");
+        details.setSimEligibilityMessage("Manual submission temporarily unavailable. Please try again later.");
+        return ResponseEntity.status(503).body(details);
+    }
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/my-docs")
     public ResponseEntity<List<UserDocumentManual>> getMyDocs(@RequestHeader("Authorization") String authHeader) {
@@ -120,5 +153,13 @@ public class UserDocumentManualController {
             return authHeader.substring(7);
         }
         throw new RuntimeException("Missing or invalid Authorization header");
+    }
+
+    private String maskAadhar(String aadhar) {
+        return "xxxx-xxxx-" + aadhar.substring(8);
+    }
+
+    private String maskPan(String pan) {
+        return "XXXXX" + pan.substring(5);
     }
 }

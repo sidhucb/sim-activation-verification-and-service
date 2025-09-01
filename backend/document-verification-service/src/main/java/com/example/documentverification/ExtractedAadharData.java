@@ -4,7 +4,6 @@ public class ExtractedAadharData {
     private String name;
     private String dob; // Date of Birth in dd/MM/yyyy format
     private String gender;
-    private String address;
     private String cardNumber;
 
     public ExtractedAadharData() {
@@ -36,13 +35,6 @@ public class ExtractedAadharData {
         this.gender = gender;
     }
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
 
     public String getCardNumber() {
         return cardNumber;

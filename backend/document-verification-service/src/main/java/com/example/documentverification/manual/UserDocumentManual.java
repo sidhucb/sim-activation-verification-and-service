@@ -14,12 +14,14 @@ public class UserDocumentManual {
 
     private String fullName;
     private String dob;
-    private String address;
     private String idNumber; // aadhar / PAN number
     private String phoneNumber;
     private String email;
-
-    private String status = "pending"; // default pending, admin can approve/reject
+    private String cardNumber;
+    private String simEligibilityMessage;
+    private String status = "pending"; 
+    private String cardType;
+    // default pending, admin can approve/reject
     
     public UserDocumentManual() {}
 
@@ -35,8 +37,6 @@ public class UserDocumentManual {
     public String getDob() { return dob; }
     public void setDob(String dob) { this.dob = dob; }
 
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
 
     public String getIdNumber() { return idNumber; }
     public void setIdNumber(String idNumber) { this.idNumber = idNumber; }
@@ -52,4 +52,28 @@ public class UserDocumentManual {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+	public String getCardNumber() {
+		return cardNumber;
+	}
+
+	public void setCardNumber(String cardNumber) {
+		this.cardNumber = cardNumber;
+	}
+
+	public String getSimEligibilityMessage() {
+		return simEligibilityMessage;
+	}
+
+	public void setSimEligibilityMessage(String simEligibilityMessage) {
+		this.simEligibilityMessage = simEligibilityMessage;
+	}
+
+	public String getCardType() {
+		return cardType;
+	}
+
+	public void setCardType(String cardType) {
+		this.cardType = cardType;
+	}
 }

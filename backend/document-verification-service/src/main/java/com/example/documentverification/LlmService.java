@@ -26,7 +26,7 @@ public class LlmService {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
     }
-
+    
     public CompletableFuture<ExtractedAadharData> extractDataWithLlm(String documentText) {
         return CompletableFuture.supplyAsync(() -> {
             String apiUrl = "https://openrouter.ai/api/v1/chat/completions";
@@ -101,7 +101,6 @@ public class LlmService {
         data.setDob(extractField(llmOutput, "\"dob\"\\s*:\\s*\"([^\"]*)\""));
         data.setGender(extractField(llmOutput, "\"gender\"\\s*:\\s*\"([^\"]*)\""));
         // IMPROVED REGEX for address: try to capture more broadly if JSON parsing fails and it's free-form
-        data.setAddress(extractField(llmOutput, "\"address\"\\s*:\\s*\"([\\s\\S]*?)(?=\",|\"$|$)")); // Capture multi-line up to next field or end
         data.setCardNumber(extractField(llmOutput, "\"cardNumber\"\\s*:\\s*\"([^\"]*)\""));
         return data;
     }
