@@ -49,10 +49,11 @@ public class SimRequestCoordinationService {
         }
     }
 
-    // New method: calls simapp microservice API to check if SIM request exists for user
+    // Updated: calls simapp microservice API using Eureka service name "sim-service"
     private boolean simRequestExists(Long userId) {
         List<String> statuses = Arrays.asList("pending", "approved", "progress", "provisioning");
-        String url = "http://localhost:8086/api/sim/requests/exists?userId=" + userId + "&statuses=" + String.join(",", statuses);
+        // Use service name "sim-service" registered in Eureka
+        String url = "http://simapp/api/sim/requests/exists?userId=" + userId + "&statuses=" + String.join(",", statuses);
         try {
             ResponseEntity<Boolean> response = restTemplate.exchange(url, HttpMethod.GET, null, Boolean.class);
             return Boolean.TRUE.equals(response.getBody());
@@ -63,8 +64,9 @@ public class SimRequestCoordinationService {
         }
     }
 
+    // Updated: Use Eureka service name "sim-service"
     private void createSimRequestInSimApp(Long userId, String userEmail, String status) {
-        String simappUrl = "http://localhost:8086/api/sim/requests";
+        String simappUrl = "http://simapp/api/sim/requests";
         Map<String, Object> payload = new HashMap<>();
 
         payload.put("requestId", "REQ-" + System.currentTimeMillis());
@@ -81,8 +83,9 @@ public class SimRequestCoordinationService {
         }
     }
     
+    // Updated: Use Eureka service name "notification-service"
     private void sendKycApprovedNotification(Long userId, String recipientEmail) {
-        String url = "http://localhost:8085/notifications/send";
+        String url = "http://notification-service/notifications/send";
         Map<String, Object> payload = new HashMap<>();
         payload.put("userId", userId);
         payload.put("recipientEmail", recipientEmail);
@@ -95,8 +98,9 @@ public class SimRequestCoordinationService {
         }
     }
 
+    // Updated: Use Eureka service name "user-service"
     private String fetchUserEmail(Long userId) {
-        String userServiceUrl = "http://localhost:8081/users/" + userId; // Adjust the URL
+        String userServiceUrl = "http://user-service/users/" + userId;
         try {
             Map<String, Object> response = restTemplate.getForObject(userServiceUrl, Map.class);
             if (response != null && response.containsKey("email")) {

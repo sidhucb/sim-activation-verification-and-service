@@ -31,7 +31,7 @@ public class DocumentDetails {
 
     @Column(name = "gender")
     private String gender;
-
+    
     @Column(name = "address")
     private String address;
 
@@ -104,14 +104,6 @@ public class DocumentDetails {
         this.gender = gender;
     }
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
     public Integer getAge() {
         return age;
     }
@@ -150,5 +142,13 @@ public class DocumentDetails {
 
     public void setPreparedAt(LocalDateTime preparedAt) {
         this.preparedAt = preparedAt;
+    }
+    
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

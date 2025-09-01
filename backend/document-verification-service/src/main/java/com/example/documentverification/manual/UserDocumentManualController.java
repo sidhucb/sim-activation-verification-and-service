@@ -1,124 +1,328 @@
 package com.example.documentverification.manual;
 
-import com.example.documentverification.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
+
+import com.example.documentverification.JwtUtil;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.http.HttpStatus;
+
+import org.springframework.http.ResponseEntity;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import org.springframework.web.bind.annotation.*;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
 import java.util.List;
-import java.util.Map;
+
 import java.util.Optional;
 
+
+
 @RestController
+
 @RequestMapping("/api/manual-docs")
+
 @CrossOrigin(origins = "http://localhost:5173")
+
 public class UserDocumentManualController {
 
-    @Autowired
-    private UserDocumentManualRepository repository;
 
-    @Autowired
-    private JwtUtil jwtUtil;
 
-    @Autowired
-    private RestTemplate restTemplate;
-    
-    @Autowired
-    private SimRequestCoordinationService simCoordinationService;
+@Autowired
 
-    // ---------------- User endpoints ----------------
+private UserDocumentManualRepository repository;
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/submit")
-    public ResponseEntity<UserDocumentManual> submitManualDetails(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestBody UserDocumentManual details
-    ) {
-        String token = extractToken(authHeader);
-        if (!jwtUtil.validateToken(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
-        Long userId = jwtUtil.extractId(token);
-        details.setUserId(userId);
-        details.setStatus("pending");
-        UserDocumentManual saved = repository.save(details);
-        return ResponseEntity.ok(saved);
-    }
 
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/my-docs")
-    public ResponseEntity<List<UserDocumentManual>> getMyDocs(@RequestHeader("Authorization") String authHeader) {
-        String token = extractToken(authHeader);
-        if (!jwtUtil.validateToken(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        Long userId = jwtUtil.extractId(token);
-        List<UserDocumentManual> list = repository.findByUserId(userId);
-        return ResponseEntity.ok(list);
-    }
+@Autowired
 
-    // ---------------- Admin endpoints ----------------
+private JwtUtil jwtUtil;
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/pending")
-    public ResponseEntity<List<UserDocumentManual>> getPending() {
-        return ResponseEntity.ok(repository.findByStatus("pending"));
-    }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}/approve")
-    public ResponseEntity<UserDocumentManual> approve(
-            @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader) {
 
-        Optional<UserDocumentManual> optional = repository.findById(id);
-        if (optional.isPresent()) {
-            UserDocumentManual doc = optional.get();
-            doc.setStatus("approved");
-            repository.save(doc);
+@Autowired
 
-            Long userId = doc.getUserId();
-            String adminEmail = jwtUtil.extractUsername(extractToken(authHeader));
+private SimRequestCoordinationService simCoordinationService;
 
-            simCoordinationService.checkAndCreateSimRequestForUser(userId, adminEmail);
 
-            return ResponseEntity.ok(doc);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}/reject")
-    public ResponseEntity<UserDocumentManual> reject(
-            @PathVariable Long id
-    ) {
-        Optional<UserDocumentManual> optional = repository.findById(id);
-        if (optional.isPresent()) {
-            UserDocumentManual doc = optional.get();
-            doc.setStatus("rejected");
-            repository.save(doc);
-            return ResponseEntity.ok(doc);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
+// ---------------- User endpoints ----------------
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/all")
-    public ResponseEntity<List<UserDocumentManual>> getAll() {
-        return ResponseEntity.ok(repository.findAll());
-    }
 
-    // ---------------- Helper methods ----------------
 
-    private String extractToken(String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-        throw new RuntimeException("Missing or invalid Authorization header");
-    }
+@PreAuthorize("isAuthenticated()")
+
+@PostMapping("/submit")
+
+@CircuitBreaker(name = "manualService", fallbackMethod = "manualFallback")
+
+public ResponseEntity<UserDocumentManual> submitManualDetails(
+
+
+@RequestHeader("Authorization") String authHeader,
+
+@RequestBody UserDocumentManual details
+
+) {
+
+String token = extractToken(authHeader);
+
+if (!jwtUtil.validateToken(token)) {
+
+return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
 }
+
+
+
+Long userId = jwtUtil.extractId(token);
+
+details.setUserId(userId);
+
+
+
+// --- Card Number Validation & Masking ---
+
+if (details.getCardNumber() != null) {
+
+String rawCardNumber = details.getCardNumber().replaceAll("\\s", "").toUpperCase();
+
+
+
+if ("Aadhar".equalsIgnoreCase(details.getCardType())) {
+
+if (rawCardNumber.matches("^\\d{12}$")) {
+
+details.setCardNumber(maskAadhar(rawCardNumber));
+
+details.setStatus("pending");
+
+} else {
+
+details.setCardNumber(null);
+
+details.setStatus("rejected");
+
+details.setSimEligibilityMessage("Invalid Aadhar number format.");
+
+return ResponseEntity.ok(details);
+
+}
+
+} else if ("PAN".equalsIgnoreCase(details.getCardType())) {
+
+if (rawCardNumber.matches("^[A-Z]{5}[0-9]{4}[A-Z]$")) {
+
+details.setCardNumber(maskPan(rawCardNumber));
+
+details.setStatus("pending");
+
+} else {
+
+details.setCardNumber(null);
+
+details.setStatus("rejected");
+
+details.setSimEligibilityMessage("Invalid PAN number format.");
+
+return ResponseEntity.ok(details);
+
+}
+
+} else {
+
+details.setCardNumber(rawCardNumber);
+
+details.setStatus("pending");
+
+}
+
+} else {
+
+details.setStatus("pending");
+
+}
+
+
+
+UserDocumentManual saved = repository.save(details);
+
+return ResponseEntity.ok(saved);
+
+}
+
+
+public ResponseEntity<UserDocumentManual> manualFallback(String authHeader, UserDocumentManual details, Throwable ex) {
+
+details.setStatus("pending");
+
+details.setSimEligibilityMessage("Manual submission temporarily unavailable. Please try again later.");
+
+return ResponseEntity.status(503).body(details);
+
+}
+
+@PreAuthorize("isAuthenticated()")
+
+@GetMapping("/my-docs")
+
+public ResponseEntity<List<UserDocumentManual>> getMyDocs(@RequestHeader("Authorization") String authHeader) {
+
+String token = extractToken(authHeader);
+
+if (!jwtUtil.validateToken(token)) {
+
+return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+}
+
+Long userId = jwtUtil.extractId(token);
+
+List<UserDocumentManual> list = repository.findByUserId(userId);
+
+return ResponseEntity.ok(list);
+
+}
+
+
+
+// ---------------- Admin endpoints ----------------
+
+
+
+@PreAuthorize("hasRole('ADMIN')")
+
+@GetMapping("/pending")
+
+public ResponseEntity<List<UserDocumentManual>> getPending() {
+
+return ResponseEntity.ok(repository.findByStatus("pending"));
+
+}
+
+
+
+@PreAuthorize("hasRole('ADMIN')")
+
+@PutMapping("/{id}/approve")
+
+public ResponseEntity<UserDocumentManual> approve(
+
+@PathVariable Long id,
+
+@RequestHeader("Authorization") String authHeader) {
+
+
+
+Optional<UserDocumentManual> optional = repository.findById(id);
+
+if (optional.isPresent()) {
+
+UserDocumentManual doc = optional.get();
+
+doc.setStatus("approved");
+
+repository.save(doc);
+
+
+
+Long userId = doc.getUserId();
+
+String adminEmail = jwtUtil.extractUsername(extractToken(authHeader));
+
+
+
+simCoordinationService.checkAndCreateSimRequestForUser(userId, adminEmail);
+
+
+
+return ResponseEntity.ok(doc);
+
+}
+
+return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+}
+
+
+
+@PreAuthorize("hasRole('ADMIN')")
+
+@PutMapping("/{id}/reject")
+
+public ResponseEntity<UserDocumentManual> reject(
+
+@PathVariable Long id
+
+) {
+
+Optional<UserDocumentManual> optional = repository.findById(id);
+
+if (optional.isPresent()) {
+
+UserDocumentManual doc = optional.get();
+
+doc.setStatus("rejected");
+
+repository.save(doc);
+
+return ResponseEntity.ok(doc);
+
+}
+
+return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+}
+
+
+
+@PreAuthorize("hasRole('ADMIN')")
+
+@GetMapping("/all")
+
+public ResponseEntity<List<UserDocumentManual>> getAll() {
+
+return ResponseEntity.ok(repository.findAll());
+
+}
+
+
+
+// ---------------- Helper methods ----------------
+
+
+
+private String extractToken(String authHeader) {
+
+if (authHeader != null && authHeader.startsWith("Bearer ")) {
+
+return authHeader.substring(7);
+
+}
+
+throw new RuntimeException("Missing or invalid Authorization header");
+
+}
+
+
+
+private String maskAadhar(String aadhar) {
+
+return "xxxx-xxxx-" + aadhar.substring(8);
+
+}
+
+
+
+private String maskPan(String pan) {
+
+return "XXXXX" + pan.substring(5);
+
+}
+
+}
+

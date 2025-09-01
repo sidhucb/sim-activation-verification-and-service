@@ -12,10 +12,7 @@ import com.example.documentverification.manual.SimRequestCoordinationService;
 import net.sourceforge.tess4j.TesseractException;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -31,7 +28,7 @@ public class DocumentController {
     private DocumentRepository documentRepository;
 
     @Autowired
-    private RestTemplate restTemplate;
+    private RestTemplate restTemplate;  // This will now be the @LoadBalanced RestTemplate
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -110,7 +107,6 @@ public class DocumentController {
 
     // ---------------- Admin Endpoints ----------------
     
- // New endpoint for admin to get all pending OCR documents
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/pending/all")
     public ResponseEntity<List<DocumentDetails>> getAllPendingDocuments() {
@@ -134,7 +130,7 @@ public class DocumentController {
         DocumentDetails doc = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
-        doc.setStatus("approved"); // use lowercase for consistency
+        doc.setStatus("approved"); // normalized to lowercase
         documentRepository.save(doc);
 
         Long userId = doc.getUserId();
@@ -150,7 +146,7 @@ public class DocumentController {
     public ResponseEntity<DocumentDetails> rejectDocument(@PathVariable Long id) {
         DocumentDetails doc = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
-        doc.setStatus("Rejected");
+        doc.setStatus("rejected");
         documentRepository.save(doc);
         return ResponseEntity.ok(doc);
     }
@@ -178,5 +174,4 @@ public class DocumentController {
         }
         return jwtUtil.extractUsername(token);
     }
-
 }
