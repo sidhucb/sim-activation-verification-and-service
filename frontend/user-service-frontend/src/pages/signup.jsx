@@ -16,7 +16,7 @@ export default function Signup() {
   const handleSignup = async () => {
     try {
       await registerUser(email, password);
-      navigate("/login");
+      navigate("/home"); // Navigate to Home page after signup
     } catch (error) {
       alert("Error creating account");
     }
@@ -77,13 +77,13 @@ export default function Signup() {
             </p>
           )}
 
-          <Button onClick={handleSignup} disabled={!isFormValid}>
+          <Button onClick={handleSignup} disabled={!isFormValid} className="red-btn">
             Create Account
           </Button>
 
           <div className="signup-bottom">
-            <Button onClick={() => navigate("/")}>Back to Landing</Button>
-            <Button onClick={() => navigate("/login")}>Login</Button>
+            <Button className="red-btn" onClick={() => navigate("/")}>Back to Landing</Button>
+            <Button className="red-btn" onClick={() => navigate("/login")}>Login</Button>
           </div>
         </Card>
 

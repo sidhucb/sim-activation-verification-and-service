@@ -1,63 +1,94 @@
-.landing-page {
+:root {
+  --verizon-red: #ff0000;
+  --verizon-black: #000000;
+  --verizon-white: #ffffff;
+  --font-primary: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+.landing-verizon {
+  background: var(--verizon-white);
+  color: var(--verizon-black);
+  font-family: var(--font-primary);
   min-height: 100vh;
-  width: 100%;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  display: flex;
+  flex-direction: column;
+}
+.vz-nav {
+  background: var(--verizon-black);
+  color: var(--verizon-white);
+  display: flex;
+  align-items: center;
+  padding: 20px 36px;
+  justify-content: space-between;
+}
+.logo {
+  font-size: 1.6rem;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+}
+.vz-btn {
+  padding: 12px 32px;
+  border-radius: 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  margin-left: 14px;
+  transition: background 0.15s, color 0.15s;
+}
+.vz-btn-red {
+  background: var(--verizon-red);
+  color: var(--verizon-white);
+}
+.vz-btn-red:hover {
+  background: #d90000;
+}
+.vz-btn-outline {
+  background: var(--verizon-white);
+  color: var(--verizon-black);
+  border: 2px solid var(--verizon-black);
+}
+.vz-hero-section {
+  background: var(--verizon-red);
+  color: var(--verizon-white);
+  text-align: center;
+  padding: 60px 20px 32px;
+}
+.vz-headline {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+.vz-lead {
+  font-size: 1.25rem;
+  margin-bottom: 28px;
+  font-weight: 400;
+}
+.vz-features {
   display: flex;
   justify-content: center;
-  align-items: center;
-  font-family: system-ui, sans-serif;
-  color: #fff;
+  gap: 40px;
+  padding: 38px 10vw 44px;
+  background: var(--verizon-white);
 }
-
-.landing-container {
-  display: flex;
-  flex-direction: row;
-  gap: 50px;
-  align-items: center;
-  max-width: 1200px;
-  padding: 20px;
+.feature-card {
+  background: var(--verizon-red);
+  color: var(--verizon-white);
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 24px 20px;
+  width: 280px;
+  text-align: left;
 }
-
-.landing-card {
-  flex: 1;
-  min-width: 300px;
-}
-
-.landing-title {
-  font-size: 3rem;
+.feature-title {
+  font-size: 1.12rem;
   font-weight: 700;
   margin-bottom: 10px;
 }
-
-.landing-tagline {
-  font-size: 1.2rem;
-  color: #ccc;
-  margin-bottom: 30px;
-}
-
-.landing-buttons {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.landing-showcase {
-  flex: 1;
-  color: #ddd;
-}
-
-.landing-showcase h2 {
-  font-size: 2rem;
-  margin-bottom: 15px;
-}
-
-.landing-showcase ul {
-  list-style: none;
-  padding-left: 0;
+.vz-footer {
+  background: var(--verizon-black);
+  color: var(--verizon-white);
+  text-align: center;
+  padding: 20px 0;
   font-size: 1rem;
-}
-
-.landing-showcase ul li {
-  margin-bottom: 10px;
+  margin-top: auto;
 }

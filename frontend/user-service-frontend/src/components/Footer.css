@@ -1,0 +1,41 @@
+.app-footer {
+  background-color: var(--verizon-black);
+  color: var(--verizon-white);
+  padding: 20px 32px;
+  font-family: var(--font-family-primary);
+  text-align: center;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.footer-content {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-content p {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.footer-nav {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.footer-link {
+  background: none;
+  border: none;
+  color: var(--verizon-red);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 4px 10px;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #a80000;
+}
