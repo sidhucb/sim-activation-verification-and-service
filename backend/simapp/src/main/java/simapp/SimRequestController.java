@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Qualifier;
+
 
 import java.time.Instant;
 import java.util.*;
@@ -22,10 +24,21 @@ public class SimRequestController {
     private AllocatedNumberRepository allocatedNumberRepository;
 
     @Autowired
+    @Qualifier("plainRestTemplate")
     private RestTemplate restTemplate;
 
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @GetMapping("/requests/exists")
+    public ResponseEntity<Boolean> checkSimRequestExists(
+        @RequestParam Long userId,
+        @RequestParam List<String> statuses
+    ) {
+        boolean exists = simRequestRepository.existsByUserIdAndStatusIn(userId, statuses);
+        return ResponseEntity.ok(exists);
+    }
+
 
     // Notify user via notification-service
     private void notifyUserWithDetails(Long userId, String email, String subject, String message) {
@@ -34,7 +47,7 @@ public class SimRequestController {
         payload.put("recipientEmail", email);
         payload.put("subject", subject);
         payload.put("message", message);
-        restTemplate.postForEntity("http://notification-service/notifications/send", payload, String.class);
+        restTemplate.postForEntity("http://localhost:8085/notifications/send", payload, String.class);
     }
 
 
@@ -105,7 +118,7 @@ public class SimRequestController {
         }
 
         // Find user's active SIM request
-        Optional<SimRequest> opt = simRequestRepository.findByUserIdAndStatusIn(userId, List.of("Approved", "Progress"));
+        Optional<SimRequest> opt = simRequestRepository.findByUserIdAndStatusIn(userId, List.of("approved", "progress"));
         if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Active SIM request not found.");
 
         SimRequest sr = opt.get();

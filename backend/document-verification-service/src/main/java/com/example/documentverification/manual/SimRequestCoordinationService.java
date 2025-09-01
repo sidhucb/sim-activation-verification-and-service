@@ -1,9 +1,13 @@
 package com.example.documentverification.manual;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,13 +34,32 @@ public class SimRequestCoordinationService {
         boolean isManualApproved = manualRepository.findByUserIdAndStatus(userId, "approved").size() > 0;
 
         if (isOcrApproved && isManualApproved) {
+            if (simRequestExists(userId)) {
+                System.out.println("SIM request already exists for userId: " + userId + ". Skipping creation.");
+                return;
+            }
+
             String userEmail = fetchUserEmail(userId);
             if (userEmail != null) {
-                createSimRequestInSimApp(userId, userEmail, "Approved");  // Pass actual user email here
+                createSimRequestInSimApp(userId, userEmail, "approved");  // Use lowercase for consistency
                 sendKycApprovedNotification(userId, userEmail);
             } else {
                 System.err.println("User email not found for userId=" + userId + ". Sim request and notification skipped.");
             }
+        }
+    }
+
+    // New method: calls simapp microservice API to check if SIM request exists for user
+    private boolean simRequestExists(Long userId) {
+        List<String> statuses = Arrays.asList("pending", "approved", "progress", "provisioning");
+        String url = "http://localhost:8086/api/sim/requests/exists?userId=" + userId + "&statuses=" + String.join(",", statuses);
+        try {
+            ResponseEntity<Boolean> response = restTemplate.exchange(url, HttpMethod.GET, null, Boolean.class);
+            return Boolean.TRUE.equals(response.getBody());
+        } catch (Exception e) {
+            System.err.println("Failed to check SIM request existence for userId " + userId + ": " + e.getMessage());
+            // Best to assume no existing request if error so workflow is not blocked
+            return false;
         }
     }
 
@@ -65,10 +88,13 @@ public class SimRequestCoordinationService {
         payload.put("recipientEmail", recipientEmail);
         payload.put("subject", "KYC Approved");
         payload.put("message", "Your KYC has been approved and you can now generate your SIM number.");
-        restTemplate.postForEntity(url, payload, String.class);
+        try {
+            restTemplate.postForEntity(url, payload, String.class);
+        } catch (Exception e) {
+            System.err.println("Failed to send KYC approved notification for userId " + userId + ": " + e.getMessage());
+        }
     }
 
-    
     private String fetchUserEmail(Long userId) {
         String userServiceUrl = "http://localhost:8081/users/" + userId; // Adjust the URL
         try {
@@ -83,4 +109,3 @@ public class SimRequestCoordinationService {
     }
 
 }
-
