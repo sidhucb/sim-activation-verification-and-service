@@ -75,7 +75,14 @@ export default function Navbar() {
         )}
 
         {/* Help + Three-dot menu always visible */}
-        <FaQuestionCircle className="navbar-icon" title="Help" />
+        
+        {/* --- MODIFICATION START --- */}
+        {/* The Question Circle icon is now a link to the FAQ page */}
+        <Link to="/faq" className="navbar-icon-link">
+          <FaQuestionCircle className="navbar-icon" title="Help & FAQ" />
+        </Link>
+        {/* --- MODIFICATION END --- */}
+
         <div className="more-wrapper">
           <FaEllipsisV className="navbar-icon" onClick={() => setMoreOpen(!moreOpen)} />
           {moreOpen && (

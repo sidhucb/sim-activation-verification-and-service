@@ -1,0 +1,75 @@
+.faq-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 100px 20px 40px; /* Add padding to account for navbar and spacing */
+  background: linear-gradient(135deg, #0f0f1a, #1a1a2e, #2c2c54);
+}
+
+.faq-content.card {
+  width: 100%;
+  max-width: 800px;
+  /* Re-using your card style from app.css for consistency */
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 2.5rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.faq-title {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2.5rem;
+  color: #61dafb; /* Neon blue title */
+  font-weight: 700;
+}
+
+.faq-list {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.faq-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.faq-question {
+  padding: 1.25rem 0.5rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.faq-question:hover {
+  color: #7b2ff7; /* Neon purple on hover */
+}
+
+.faq-icon {
+  font-size: 1.5rem;
+  font-weight: 400;
+  transition: transform 0.3s ease;
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0, 1, 0, 1), padding 0.5s ease;
+  color: #ccc;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.faq-answer.open {
+  max-height: 300px; /* Adjust if you have very long answers */
+  transition: max-height 1s cubic-bezier(1, 0, 1, 0), padding 0.5s ease;
+  padding: 0 0.5rem 1.25rem;
+}
+
+.faq-answer p {
+  margin: 0;
+}
