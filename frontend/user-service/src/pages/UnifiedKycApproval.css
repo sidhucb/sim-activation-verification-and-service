@@ -25,11 +25,11 @@
   border-collapse: collapse;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 8px 24px rgba(255, 11, 11, 0.7);
 }
 
 .kyc-table thead {
-  background-color: rgba(159, 122, 234, 0.8);
+  background-color: rgba(203, 68, 68, 0.8);
 }
 
 .kyc-table th {

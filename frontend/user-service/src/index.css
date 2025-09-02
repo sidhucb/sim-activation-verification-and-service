@@ -6,13 +6,13 @@
 }
 
 :root {
-  --primary-color: #9f7aea;
-  --secondary-color: #00d4ff;
-  --accent-color: #ff4d6d;
-  --bg-gradient: linear-gradient(135deg, #1a1a1a, #242424);
-  --card-bg: rgba(60, 60, 60, 0.85);
-  --text-color: #fff;
-  --text-secondary: #ccc;
+  --primary-color: #e63946; /* Bold red */
+  --secondary-color: #ff6b6b; /* Softer coral red */
+  --accent-color: #ff1744; /* Vibrant accent red */
+  --bg-gradient: linear-gradient(135deg, #ffffff, #f8f9fa); /* Clean white gradient */
+  --card-bg: rgba(255, 255, 255, 0.9); /* White with slight transparency */
+  --text-color: #1a1a1a; /* Dark text for readability */
+  --text-secondary: #555; /* Softer gray text */
 }
 
 body {

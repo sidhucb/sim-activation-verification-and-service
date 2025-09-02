@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { FaBell, FaUserCircle, FaQuestionCircle, FaEllipsisV } from "react-icons/fa";
 import "./Navbar.css";
@@ -6,6 +6,7 @@ import "./Navbar.css";
 export default function Navbar() {
   const location = useLocation();
   const pathname = location.pathname;
+  const navigate = useNavigate(); // <-- add this
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -18,7 +19,6 @@ export default function Navbar() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      // Example notifications
       const data = [
         { id: 1, message: "SIM activated successfully", read: false },
         { id: 2, message: "New SIM available", read: true },
@@ -28,18 +28,25 @@ export default function Navbar() {
     }
   }, [isLoggedIn, pathname]);
 
-  // Only show notifications + profile if logged in AND on dashboard/admin-dashboard
   const showNotifProfile = isLoggedIn && (pathname.startsWith("/dashboard") || pathname.startsWith("/admin-dashboard"));
 
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        <img src="/logo.png" alt="Nexus Logo" className="navbar-logo" />
+        {/* --- BACK BUTTON --- */}
+        <button
+          className="navbar-back-button"
+          onClick={() => navigate(-1)}
+        >
+          ⬅
+        </button>
+
+        {/* Logo & Title */}
+        <img src="src/Nexus LOGO.PNG" alt="Nexus Logo" className="navbar-logo" />
         <span className="navbar-title">Nexus Networks</span>
       </div>
 
       <div className="navbar-right">
-        {/* Notifications + Profile only when logged in and on dashboard */}
         {showNotifProfile && (
           <>
             <div className="notification-wrapper">
@@ -74,14 +81,9 @@ export default function Navbar() {
           </>
         )}
 
-        {/* Help + Three-dot menu always visible */}
-        
-        {/* --- MODIFICATION START --- */}
-        {/* The Question Circle icon is now a link to the FAQ page */}
         <Link to="/faq" className="navbar-icon-link">
           <FaQuestionCircle className="navbar-icon" title="Help & FAQ" />
         </Link>
-        {/* --- MODIFICATION END --- */}
 
         <div className="more-wrapper">
           <FaEllipsisV className="navbar-icon" onClick={() => setMoreOpen(!moreOpen)} />

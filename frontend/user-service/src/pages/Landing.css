@@ -1,12 +1,12 @@
 .landing-page {
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  background: #fff; /* White background */
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: system-ui, sans-serif;
-  color: #fff;
+  color: #000; /* Default text black */
 }
 
 .landing-container {
@@ -15,23 +15,30 @@
   gap: 50px;
   align-items: center;
   max-width: 1200px;
-  padding: 20px;
+  padding: 40px; /* Increased padding for bigger layout */
 }
 
 .landing-card {
   flex: 1;
-  min-width: 300px;
+  min-width: 350px; /* Slightly bigger */
+  background: #fff; /* White card */
+  padding: 40px; /* Bigger padding */
+  border-radius: 1rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15); /* Soft shadow for depth */
+  color: #000; /* Black text */
+  border: 2px solid #e63946; /* Red border accent */
 }
 
 .landing-title {
   font-size: 3rem;
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  color: #e63946; /* Red title */
 }
 
 .landing-tagline {
   font-size: 1.2rem;
-  color: #ccc;
+  color: #151414; /* Dark gray tagline */
   margin-bottom: 30px;
 }
 
@@ -42,20 +49,38 @@
   justify-content: center;
 }
 
+.landing-buttons button {
+  padding: 12px 24px; /* Bigger buttons */
+  background: #e63946; /* Red buttons */
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.landing-buttons button:hover {
+  background: #c1121f; /* Darker red */
+  transform: scale(1.05); /* Subtle hover effect */
+}
+
 .landing-showcase {
   flex: 1;
-  color: #ddd;
+  color: #151414; /* Dark gray text */
 }
 
 .landing-showcase h2 {
   font-size: 2rem;
   margin-bottom: 15px;
+  color: #e63946; /* Red headings */
 }
 
 .landing-showcase ul {
   list-style: none;
   padding-left: 0;
   font-size: 1rem;
+  color: #151414; /* Dark gray list items */
 }
 
 .landing-showcase ul li {

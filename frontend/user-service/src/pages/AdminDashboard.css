@@ -3,7 +3,7 @@
   padding: 40px;
   /* This is the fix: pushes content down below the navbar */
   padding-top: 80px; 
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  background: linear-gradient(135deg, #ffffff, #ffffff, #ffffff);
   font-family: system-ui, sans-serif;
   color: #fff;
 }
@@ -23,8 +23,8 @@
 .admin-card {
   padding: 40px 20px;
   border-radius: 15px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: rgb(255, 255, 255);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   text-align: center;
   font-size: 1.5rem;
   font-weight: 600;
@@ -34,6 +34,6 @@
 
 .admin-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 0 20px #7f00ff, 0 0 40px #00ffae;
-  background: rgba(255,255,255,0.1);
+  box-shadow: 0 0 20px #ff0000, 0 0 40px #b33030;
+  background: rgb(255, 255, 255);
 }

@@ -66,7 +66,7 @@ public class SimRequestCoordinationService {
 
     // Updated: Use Eureka service name "sim-service"
     private void createSimRequestInSimApp(Long userId, String userEmail, String status) {
-        String simappUrl = "http://simapp/api/sim/requests";
+        String simappUrl = "http://SIMAPP/api/sim/requests";
         Map<String, Object> payload = new HashMap<>();
 
         payload.put("requestId", "REQ-" + System.currentTimeMillis());

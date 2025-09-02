@@ -3,35 +3,34 @@
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
-  padding: 100px 20px 40px; /* Add padding to account for navbar and spacing */
-  background: linear-gradient(135deg, #0f0f1a, #1a1a2e, #2c2c54);
+  padding: 100px 20px 40px; /* Account for navbar and spacing */
+  background: #f8f8f8; /* Light neutral background for eyes */
 }
 
 .faq-content.card {
   width: 100%;
   max-width: 800px;
-  /* Re-using your card style from app.css for consistency */
-  background: rgba(255, 255, 255, 0.08);
+  background: #fff; /* White card for contrast */
   border-radius: 1rem;
   padding: 2.5rem;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); /* Soft black shadow */
+  border-top: 5px solid #e63946; /* Red accent line at top */
 }
 
 .faq-title {
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2.5rem;
-  color: #61dafb; /* Neon blue title */
+  color: #e63946; /* Red title */
   font-weight: 700;
 }
 
 .faq-list {
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid #e63946; /* Subtle red line */
 }
 
 .faq-item {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Light black divider */
 }
 
 .faq-question {
@@ -42,30 +41,32 @@
   align-items: center;
   font-size: 1.1rem;
   font-weight: 600;
+  color: #000; /* Black text for questions */
   transition: color 0.3s ease;
 }
 
 .faq-question:hover {
-  color: #7b2ff7; /* Neon purple on hover */
+  color: #e63946; /* Red on hover */
 }
 
 .faq-icon {
   font-size: 1.5rem;
   font-weight: 400;
   transition: transform 0.3s ease;
+  color: #e63946; /* Red icon */
 }
 
 .faq-answer {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.5s cubic-bezier(0, 1, 0, 1), padding 0.5s ease;
-  color: #ccc;
+  color: #333; /* Dark gray text for readability */
   font-size: 1rem;
   line-height: 1.6;
 }
 
 .faq-answer.open {
-  max-height: 300px; /* Adjust if you have very long answers */
+  max-height: 300px; /* Adjust for long answers */
   transition: max-height 1s cubic-bezier(1, 0, 1, 0), padding 0.5s ease;
   padding: 0 0.5rem 1.25rem;
 }
