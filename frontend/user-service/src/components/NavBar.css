@@ -9,8 +9,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
-  background: rgba(15, 12, 41, 0.5);
-  backdrop-filter: blur(12px);
+  background: rgba(12, 5, 5, 0.5);
+  /*backdrop-filter: blur(12px);*/
   border-bottom: 1px solid rgba(255,255,255,0.1);
   color: #fff;
 }
@@ -30,7 +30,7 @@
 .navbar-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #e100ff;
+  color: #f01111;
 }
 
 .navbar-right {
@@ -47,8 +47,8 @@
 }
 
 .navbar-icon:hover {
-  color: #00ffae;
-  text-shadow: 0 0 5px #00ffae, 0 0 10px #e100ff;
+  color: #ff0000;
+  text-shadow: 0 0 5px #ff2b2b, 0 0 10px #f33434;
 }
 
 .profile-wrapper, .more-wrapper, .notification-wrapper {
@@ -60,7 +60,7 @@
   position: absolute;
   top: 50px;
   right: 0;
-  background: rgba(255,255,255,0.05);
+  background: rgb(255, 255, 255);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
@@ -71,14 +71,14 @@
 }
 
 .profile-dropdown a, .more-dropdown a {
-  color: #fff;
+  color: #c32424;
   text-decoration: none;
   padding: 8px 10px;
   border-radius: 5px;
 }
 
 .profile-dropdown a:hover, .more-dropdown a:hover {
-  background: rgba(128,0,255,0.4);
+  background: rgb(255, 255, 255);
 }
 
 /* Notifications */
@@ -101,7 +101,7 @@
 
 .notification-dropdown .unread {
   font-weight: 700;
-  color: #00ffae;
+  color: #ff0000;
 }
 
 .notification-dropdown .read {
@@ -111,4 +111,19 @@
 .notification-empty {
   color: #aaa;
   text-align: center;
+}
+.navbar-back-button {
+  background: #e63946; /* Red button */
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-right: 10px; /* Space between button and logo */
+  transition: background 0.3s ease;
+}
+
+.navbar-back-button:hover {
+  background: #c1121f; /* Darker red on hover */
 }

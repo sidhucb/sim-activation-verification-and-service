@@ -6,12 +6,12 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/UserManagement";
-import UnifiedKycApproval from "./pages/UnifiedKycApproval"; // import new page
+import UnifiedKycApproval from "./pages/UnifiedKycApproval";
 import Navbar from "./components/Navbar";
-import UserKycDashboard from "./pages/UserKycDashboard"; // import the new page
+import UserKycDashboard from "./pages/UserKycDashboard";
 import CheckSimStatus from "./pages/CheckSimStatus";
-
-
+import FaqPage from "./pages/FaqPages";
+import TawkToChat from './components/TawkToChat'; // <-- 1. IMPORT THE CHAT COMPONENT
 
 // MOCK AUTH HOOK FOR DEMONSTRATION
 // In your real app, this would get state from a context
@@ -23,34 +23,34 @@ const useAuth = () => {
   return user;
 };
 
-
 // PROTECTED ROUTE COMPONENT
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { isLoggedIn, role } = useAuth(); // Use your actual auth hook
-
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
 
-
   if (requiredRole && role !== requiredRole) {
     return <Navigate to="/dashboard" replace />;
   }
 
-
   return children;
 };
-
 
 function App() {
   return (
     <Router>
       <Navbar />
+      <TawkToChat /> {/* <-- 2. ADD THE CHAT COMPONENT HERE */}
       <Routes>
+        {/* --- Public Routes --- */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/faq" element={<FaqPage />} />
+
+        {/* --- Protected User Routes --- */}
         <Route 
           path="/dashboard" 
           element={
@@ -59,32 +59,6 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        <Route 
-          path="/admin-dashboard" 
-          element={
-            <ProtectedRoute requiredRole="ADMIN">
-              <AdminDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin-dashboard/users" 
-          element={
-            <ProtectedRoute requiredRole="ADMIN">
-              <UserManagement />
-            </ProtectedRoute>
-          } 
-        />
-        {/* New route for unified KYC approval */}
-        <Route
-          path="/admin-dashboard/kyc-approval"
-          element={
-            <ProtectedRoute requiredRole="ADMIN">
-              <UnifiedKycApproval />
-            </ProtectedRoute>
-          }
-        />
-        {/* New route for user KYC dashboard */}
         <Route
           path="/dashboard/kyc"
           element={
@@ -102,10 +76,34 @@ function App() {
           }
         />
 
+        {/* --- Protected Admin Routes --- */}
+        <Route 
+          path="/admin-dashboard" 
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin-dashboard/users" 
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <UserManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route
+          path="/admin-dashboard/kyc-approval"
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <UnifiedKycApproval />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );
 }
-
 
 export default App;

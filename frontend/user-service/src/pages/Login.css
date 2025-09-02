@@ -1,16 +1,16 @@
-.signup-page {
+.login-page {
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  background: linear-gradient(135deg, #ffffff, #f8f9fa, #ffffff); /* Clean white gradient */
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: system-ui, sans-serif;
-  color: #fff;
+  color: #1a1a1a; /* Dark text for readability */
   padding: 20px;
 }
 
-.signup-container {
+.login-container {
   display: flex;
   flex-direction: row;
   gap: 50px;
@@ -19,31 +19,36 @@
   width: 100%;
 }
 
-.signup-card {
+.login-card {
   flex: 1;
   min-width: 300px;
   display: flex;
   flex-direction: column;
   gap: 15px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.signup-title {
+.login-title {
   font-size: 2.5rem;
   margin-bottom: 20px;
+  color: #e63946; /* Red title */
 }
 
 input {
   width: 100%;
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  border: 1px solid #e63946; /* Red border */
+  background: #fff;
+  color: #1a1a1a; /* Dark text */
   font-size: 14px;
 }
 
 input::placeholder {
-  color: #ccc;
+  color: #888;
 }
 
 .password-wrapper {
@@ -58,7 +63,7 @@ input::placeholder {
   transform: translateY(-50%);
   cursor: pointer;
   font-size: 13px;
-  color: #7f00ff;
+  color: #e63946; /* Red instead of dull */
   font-weight: 600;
 }
 
@@ -69,32 +74,43 @@ input::placeholder {
   width: 100%;
 }
 
-.success { color: #00ffae; }
-.error { color: #ff4d6d; }
+.success { color: #28a745; }  /* Green for success */
+.error { color: #e63946; }    /* Red for errors */
 
-.signup-bottom {
+.login-bottom {
   display: flex;
   gap: 10px;
   margin-top: 10px;
   flex-wrap: wrap;
 }
 
-.signup-showcase {
+.login-showcase {
   flex: 1;
-  color: #ddd;
+  color: #444; /* Dark gray */
 }
 
-.signup-showcase h2 {
+.login-showcase h2 {
   font-size: 2rem;
   margin-bottom: 15px;
+  color: #e63946; /* Red heading */
 }
 
-.signup-showcase ul {
+.login-showcase ul {
   list-style: none;
   padding-left: 0;
   font-size: 1rem;
 }
 
-.signup-showcase ul li {
+.login-showcase ul li {
   margin-bottom: 10px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.login-showcase ul li::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  color: #e63946; /* Red checkmark */
+  font-size: 14px;
 }

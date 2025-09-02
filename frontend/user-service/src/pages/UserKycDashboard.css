@@ -1,0 +1,53 @@
+.user-kyc-page {
+  max-width: 700px;
+  margin: 2.5rem auto; /* Slightly more spacing from top */
+  color: #151414; /* Dark text for readability */
+  font-family: system-ui, sans-serif;
+  padding: 1.5rem; /* More padding around page */
+}
+
+.status-card, 
+.manual-details-card, 
+.doc-upload-card {
+  margin-bottom: 2.5rem; /* More spacing between cards */
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: #fff; /* White card background */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+.manual-details-card form input,
+.doc-upload-card form input {
+  width: 100%;
+  margin-bottom: 1.2rem; /* Slightly more spacing between fields */
+  padding: 0.9rem; /* Bigger padding for comfort */
+  border-radius: 8px;
+  border: 1px solid #e63946; /* Red accent border */
+  background: #fff; /* White background */
+  color: #151414; /* Dark text color for visibility */
+  font-size: 1rem;
+}
+
+.message {
+  margin-top: 0.7rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Success message */
+.message.success {
+  color: #28a745; /* Green for success */
+}
+
+/* Error message */
+.message.error {
+  color: #e63946; /* Red for error */
+}
+
+
+label {
+  display: block;
+  margin-bottom: 0.7rem;
+  font-weight: 600;
+  color: #151414; /* Dark label text */
+}
