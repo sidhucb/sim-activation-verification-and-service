@@ -113,7 +113,6 @@ public class UserDocumentManualController {
         return ResponseEntity.ok(repository.findAll());
     }
 
-    // ---------------- Helper methods ----------------
 
     private String extractToken(String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

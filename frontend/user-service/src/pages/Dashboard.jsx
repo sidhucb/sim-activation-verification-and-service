@@ -19,9 +19,9 @@ export default function Dashboard() {
 
   // Sample data based on the chart image
   const data = [
-    { age: "15-24 years", Male: 94.8, Female: 90.1 },
-    { age: "15-29 years", Male: 95.9, Female: 90.5 },
-    { age: "15+ years", Male: 89.5, Female: 74.9 },
+    { age: "18-24 years", Male: 94.8, Female: 90.1 },
+    { age: "24-29 years", Male: 95.9, Female: 90.5 },
+    { age: "29+ years", Male: 89.5, Female: 74.9 },
   ];
 
   return (

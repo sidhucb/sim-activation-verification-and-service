@@ -14,7 +14,7 @@ import java.io.IOException;
 @Configuration
 public class OpenRouterConfig {
 
-    @Value("${openrouter.api-key}") // Ensure this matches application.yml
+    @Value("${openrouter.api-key}") 
     private String openRouterApiKey;
 
     @Bean

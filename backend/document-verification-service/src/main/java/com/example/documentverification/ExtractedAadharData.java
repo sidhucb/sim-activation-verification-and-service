@@ -8,7 +8,7 @@ public class ExtractedAadharData {
     private String cardNumber;
 
     public ExtractedAadharData() {
-        // Default constructor
+        
     }
 
     // Getters and Setters

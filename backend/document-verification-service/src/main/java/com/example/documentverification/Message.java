@@ -8,7 +8,6 @@ public class Message {
     private String content;
 
     public Message() {
-        // Default constructor for JSON deserialization
     }
 
     public Message(String role, String content) {

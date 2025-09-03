@@ -108,7 +108,6 @@ public class DocumentController {
         return documentRepository.findEligibilityStatusByUserId(userId);
     }
 
-    // ---------------- Admin Endpoints ----------------
     
  // New endpoint for admin to get all pending OCR documents
     @PreAuthorize("hasRole('ADMIN')")
@@ -155,7 +154,6 @@ public class DocumentController {
         return ResponseEntity.ok(doc);
     }
 
-    // ---------------- Helper methods ----------------
 
     private Long extractUserIdFromAuthHeader(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
